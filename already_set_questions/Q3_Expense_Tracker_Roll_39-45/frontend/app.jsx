@@ -1,457 +1,100 @@
-// Dynamic API base: points to backend port 5003 if opened standalone, or relative '/api' when served by Express
-const BACKEND_PORT = 5003;
-const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== String(BACKEND_PORT)))
-  ? `http://localhost:${BACKEND_PORT}`
-  : '';
+import React, { useState, useEffect } from 'react';
 
-const { useState, useEffect, useMemo } = React;
+export default function App() {
+  const [expenses, setExpenses] = useState([]);
+  const [form, setForm] = useState({ title: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0] });
 
-const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Utilities', 'Healthcare', 'Shopping', 'Other'];
-const CATEGORY_ICONS = {
-  Food: '🍔',
-  Transport: '🚗',
-  Entertainment: '🎬',
-  Utilities: '💡',
-  Healthcare: '💊',
-  Shopping: '🛍️',
-  Other: '📦'
-};
+  const loadExpenses = async () => {
+    const res = await fetch('/api/expenses');
+    setExpenses(await res.json());
+  };
 
-// Toast notification component
-function Toast({ message, onClose }) {
-  if (!message) return null;
+  useEffect(() => { loadExpenses(); }, []);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await fetch('/api/expenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    });
+    setForm({ title: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0] });
+    loadExpenses();
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+    loadExpenses();
+  };
+
+  const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+  const categories = ['Food', 'Transport', 'Entertainment', 'Bills'];
+
   return (
-    <div className="toast show" onClick={onClose}>
-      {message}
-    </div>
-  );
-}
+    <div style={{ maxWidth: 800, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <h2>💰 Daily Expense Tracker (Roll 39-45)</h2>
 
-// Navigation Bar with Month Selector
-function Navbar({ selectedMonth, onMonthChange, totalExpense }) {
-  return (
-    <header className="navbar">
-      <div className="nav-container">
-        <div className="brand">
-          <span className="brand-icon">💰</span>
-          <span className="brand-title">Expense<strong>Track</strong></span>
+      {/* Summary KPI Card */}
+      <div style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
+        <div style={{ flex: 1, padding: 15, background: '#eff6ff', borderRadius: 8, border: '1px solid #bfdbfe' }}>
+          <h4 style={{ margin: '0 0 5px', color: '#1e40af' }}>Total Monthly Spent</h4>
+          <h2 style={{ margin: 0, color: '#1d4ed8' }}>₹{totalSpent}</h2>
         </div>
-        <div className="month-selector-box">
-          <label>Filter Month:</label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => onMonthChange(e.target.value)}
-          />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-// Visual Chart Component showing category breakdown bars
-function CategoryChart({ categoryTotals, grandTotal }) {
-  return (
-    <div className="card chart-card">
-      <h3 className="card-title">Category Breakdown & Spending Ratio</h3>
-      {grandTotal === 0 ? (
-        <p className="empty-text">No spending recorded for this period.</p>
-      ) : (
-        <div className="chart-bars-list">
-          {Object.entries(categoryTotals).map(([cat, amount]) => {
-            const percentage = ((amount / grandTotal) * 100).toFixed(1);
+        <div style={{ flex: 2, padding: 15, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+          <h4 style={{ margin: '0 0 8px' }}>Category Breakdown</h4>
+          {categories.map(cat => {
+            const catTotal = expenses.filter(e => e.category === cat).reduce((s, e) => s + Number(e.amount), 0);
+            const pct = totalSpent > 0 ? Math.round((catTotal / totalSpent) * 100) : 0;
             return (
-              <div key={cat} className="bar-row">
-                <div className="bar-label">
-                  <span>{CATEGORY_ICONS[cat] || '📦'} {cat}</span>
-                  <span className="bar-amount">₹{amount.toLocaleString('en-IN')} ({percentage}%)</span>
+              <div key={cat} style={{ marginBottom: 6, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <span>{cat}: ₹{catTotal}</span><span>{pct}%</span>
                 </div>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${percentage}%` }}
-                  ></div>
+                <div style={{ background: '#e2e8f0', height: 8, borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ background: '#3b82f6', width: `${pct}%`, height: '100%' }}></div>
                 </div>
               </div>
             );
           })}
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
 
-// Main App Component
-function App() {
-  const [expenses, setExpenses] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    return `${now.getFullYear()}-${m}`;
-  });
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [toastMessage, setToastMessage] = useState('');
-  const [editingExpense, setEditingExpense] = useState(null);
+      {/* Add Expense Form */}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
+        <input placeholder="Expense Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required style={{ flex: 2, padding: 8 }} />
+        <input placeholder="Amount (₹)" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required style={{ flex: 1, padding: 8 }} />
+        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ padding: 8 }}>
+          {categories.map(c => <option key={c}>{c}</option>)}
+        </select>
+        <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required style={{ padding: 8 }} />
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Add Expense
+        </button>
+      </form>
 
-  const [formData, setFormData] = useState({
-    title: '',
-    amount: '',
-    category: 'Food',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: 'UPI',
-    notes: ''
-  });
-
-  useEffect(() => {
-    fetchExpenses();
-  }, []);
-
-  const fetchExpenses = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/expenses`);
-      const data = await res.json();
-      setExpenses(data);
-    } catch (err) {
-      showToast('Error connecting to backend: ' + err.message);
-    }
-  };
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
-
-  // Filter expenses by selected month
-  const monthlyExpenses = useMemo(() => {
-    return expenses.filter((e) => (e.date || '').startsWith(selectedMonth));
-  }, [expenses, selectedMonth]);
-
-  // Compute category totals and grand total
-  const { categoryTotals, grandTotal, topCategory } = useMemo(() => {
-    const totals = {};
-    let total = 0;
-    CATEGORIES.forEach((c) => (totals[c] = 0));
-
-    monthlyExpenses.forEach((e) => {
-      const amt = Number(e.amount) || 0;
-      total += amt;
-      const cat = totals.hasOwnProperty(e.category) ? e.category : 'Other';
-      totals[cat] = (totals[cat] || 0) + amt;
-    });
-
-    let maxCat = 'None';
-    let maxAmt = 0;
-    Object.entries(totals).forEach(([c, a]) => {
-      if (a > maxAmt) {
-        maxAmt = a;
-        maxCat = c;
-      }
-    });
-
-    return { categoryTotals: totals, grandTotal: total, topCategory: maxCat };
-  }, [monthlyExpenses]);
-
-  // Filtered by active category pill
-  const displayedExpenses = useMemo(() => {
-    if (activeCategory === 'All') return monthlyExpenses;
-    return monthlyExpenses.filter((e) => e.category === activeCategory);
-  }, [monthlyExpenses, activeCategory]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.title.trim() || Number(formData.amount) <= 0) {
-      showToast('Please enter a valid title and positive amount.');
-      return;
-    }
-
-    try {
-      if (editingExpense) {
-        // PUT update
-        const id = editingExpense.id || editingExpense._id;
-        const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, amount: Number(formData.amount) })
-        });
-        if (!res.ok) throw new Error('Failed to update expense');
-        const updated = await res.json();
-        setExpenses((prev) =>
-          prev.map((exp) => ((exp.id || exp._id) === id ? updated : exp))
-        );
-        showToast('Expense updated successfully!');
-        setEditingExpense(null);
-      } else {
-        // POST create
-        const res = await fetch(`${API_BASE}/api/expenses`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, amount: Number(formData.amount) })
-        });
-        if (!res.ok) throw new Error('Failed to save expense');
-        const created = await res.json();
-        setExpenses((prev) => [created, ...prev]);
-        showToast('New expense added successfully!');
-      }
-
-      setFormData({
-        title: '',
-        amount: '',
-        category: 'Food',
-        date: new Date().toISOString().split('T')[0],
-        paymentMethod: 'UPI',
-        notes: ''
-      });
-    } catch (err) {
-      showToast('Error: ' + err.message);
-    }
-  };
-
-  const handleEdit = (expense) => {
-    setEditingExpense(expense);
-    setFormData({
-      title: expense.title,
-      amount: expense.amount,
-      category: expense.category,
-      date: expense.date,
-      paymentMethod: expense.paymentMethod || 'UPI',
-      notes: expense.notes || ''
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Delete expense "${title}"?`)) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/expenses/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete expense');
-      setExpenses((prev) => prev.filter((e) => (e.id || e._id) !== id));
-      showToast('Expense deleted.');
-      if (editingExpense && (editingExpense.id || editingExpense._id) === id) {
-        setEditingExpense(null);
-      }
-    } catch (err) {
-      showToast('Error: ' + err.message);
-    }
-  };
-
-  return (
-    <div id="app">
-      <Navbar
-        selectedMonth={selectedMonth}
-        onMonthChange={setSelectedMonth}
-        totalExpense={grandTotal}
-      />
-
-      <main className="content-container">
-        {/* Analytics Top Cards */}
-        <section className="stats-grid">
-          <div className="stat-card">
-            <span className="stat-icon">💵</span>
-            <div className="stat-info">
-              <span className="stat-label">Total Spent ({selectedMonth})</span>
-              <span className="stat-value highlight">₹{grandTotal.toLocaleString('en-IN')}</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">🔥</span>
-            <div className="stat-info">
-              <span className="stat-label">Top Spending Category</span>
-              <span className="stat-value">{topCategory}</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">📊</span>
-            <div className="stat-info">
-              <span className="stat-label">Total Transactions</span>
-              <span className="stat-value">{monthlyExpenses.length}</span>
-            </div>
-          </div>
-        </section>
-
-        <div className="main-layout-grid">
-          {/* Add / Edit Expense Form */}
-          <div className="card">
-            <h3 className="card-title">
-              {editingExpense ? '✏️ Edit Expense Entry' : '➕ Add New Expense'}
-            </h3>
-            <form onSubmit={handleSubmit} className="expense-form">
-              <div className="form-group">
-                <label>Expense Title / Description *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Organic Veggies, Subway Lunch"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Amount (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="e.g. 450"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {CATEGORY_ICONS[c]} {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Payment Method</label>
-                  <select
-                    value={formData.paymentMethod}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  >
-                    <option value="UPI">UPI (GPay / PhonePe)</option>
-                    <option value="Card">Debit / Credit Card</option>
-                    <option value="Cash">Cash</option>
-                    <option value="NetBanking">Net Banking</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Notes / Receipt info (optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Split with roommates"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                  {editingExpense ? 'Save Changes' : '+ Record Expense'}
+      {/* Expense History Table */}
+      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th>Date</th><th>Title</th><th>Category</th><th>Amount</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {expenses.map(e => (
+            <tr key={e._id}>
+              <td>{e.date}</td><td>{e.title}</td><td>{e.category}</td><td>₹{e.amount}</td>
+              <td>
+                <button onClick={() => handleDelete(e._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>
+                  Delete
                 </button>
-                {editingExpense && (
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setEditingExpense(null);
-                      setFormData({
-                        title: '',
-                        amount: '',
-                        category: 'Food',
-                        date: new Date().toISOString().split('T')[0],
-                        paymentMethod: 'UPI',
-                        notes: ''
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
-
-          {/* Visual Category Breakdown Chart */}
-          <CategoryChart categoryTotals={categoryTotals} grandTotal={grandTotal} />
-        </div>
-
-        {/* Expenses List & Category Filters */}
-        <section className="card list-section">
-          <div className="list-header">
-            <h3>Recent Expenses ({displayedExpenses.length})</h3>
-            <div className="category-pills">
-              <button
-                className={`pill ${activeCategory === 'All' ? 'active' : ''}`}
-                onClick={() => setActiveCategory('All')}
-              >
-                All
-              </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  className={`pill ${activeCategory === cat ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  {CATEGORY_ICONS[cat]} {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {displayedExpenses.length === 0 ? (
-            <div className="empty-state">
-              <p>No transactions match the selected filter.</p>
-            </div>
-          ) : (
-            <div className="expense-items-list">
-              {displayedExpenses.map((exp) => (
-                <div key={exp.id || exp._id} className="expense-row">
-                  <div className="exp-icon-wrap">{CATEGORY_ICONS[exp.category] || '📦'}</div>
-                  <div className="exp-details">
-                    <h4>{exp.title}</h4>
-                    <p>
-                      <span>{exp.category}</span> • <span>{exp.date}</span> • <span>{exp.paymentMethod}</span>
-                      {exp.notes && <span className="notes-tag">({exp.notes})</span>}
-                    </p>
-                  </div>
-                  <div className="exp-amount">₹{Number(exp.amount).toLocaleString('en-IN')}</div>
-                  <div className="exp-actions">
-                    <button
-                      className="btn-icon"
-                      onClick={() => handleEdit(exp)}
-                      title="Edit expense"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="btn-icon delete"
-                      onClick={() => handleDelete(exp.id || exp._id, exp.title)}
-                      title="Delete expense"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+              </td>
+            </tr>
+          ))}
+          {expenses.length === 0 && (
+            <tr><td colSpan="5" style={{ textAlign: 'center' }}>No expenses recorded yet.</td></tr>
           )}
-        </section>
-      </main>
-
-      <footer className="footer">
-        <div className="footer-container">
-          <p>OST Lab IA-2 (Roll No: 39 to 45) | Stack: React 18 + Node.js/Express + MongoDB Charts</p>
-        </div>
-      </footer>
-
-      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+        </tbody>
+      </table>
     </div>
   );
 }
-
-// Mount React Root
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);

@@ -1,236 +1,90 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 5007;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const DB_NAME = 'product_user_db';
 
 app.use(cors());
 app.use(express.json());
-const FRONTEND_DIST = path.join(__dirname, '..', 'frontend', 'dist');
-const FRONTEND_DIR = fs.existsSync(FRONTEND_DIST) ? FRONTEND_DIST : path.join(__dirname, '..', 'frontend');
-app.use(express.static(FRONTEND_DIR));
+
+const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(distPath));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+let memoryProducts = [
+  { _id: '1', name: 'Wireless Mouse', price: 699, stock: 45, category: 'Electronics' },
+  { _id: '2', name: 'Mechanical Keyboard', price: 2499, stock: 20, category: 'Electronics' }
+];
+let memoryUsers = [
+  { _id: '101', name: 'Alex Johnson', email: 'alex@example.com', phone: '9876543210' }
+];
 
 let db = null;
-let isMongoConnected = false;
-
-const DATA_FILE = path.join(__dirname, 'data_fallback.json');
-let memoryData = {
-  products: [
-    { id: 'p1', name: 'Ultra-Wide 34" Curved Monitor', price: 34999, stock: 12, category: 'Electronics', description: 'WQHD 144Hz HDR curved gaming display' },
-    { id: 'p2', name: 'Mechanical Keyboard (Hot-swap)', price: 4299, stock: 35, category: 'Computers', description: 'Gateron Yellow linear switches, RGB backlit' }
-  ],
-  users: [
-    { id: 'u1', name: 'Aryan Chaurasia', email: 'aryan@example.com', phone: '9876543210', role: 'Admin' },
-    { id: 'u2', name: 'Sneha Patel', email: 'sneha.p@company.in', phone: '9123456780', role: 'Manager' }
-  ]
-};
-
-function loadFallback() {
-  if (fs.existsSync(DATA_FILE)) {
-    try { memoryData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8')); } catch(e){}
-  }
-}
-function saveFallback() {
-  try { fs.writeFileSync(DATA_FILE, JSON.stringify(memoryData, null, 2)); } catch(e){}
-}
-
-async function connectDB() {
-  loadFallback();
-  try {
-    const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 2000 });
-    await client.connect();
+const client = new MongoClient('mongodb://127.0.0.1:27017');
+client.connect()
+  .then(async () => {
     db = client.db(DB_NAME);
-    isMongoConnected = true;
-    console.log('[MongoClient] Connected to database: ' + DB_NAME);
-    const count = await db.collection('products').countDocuments();
-    if (count === 0 && memoryData.products.length > 0) {
-      await db.collection('products').insertMany(memoryData.products.map(p => ({ ...p, _id: p.id })));
-      await db.collection('users').insertMany(memoryData.users.map(u => ({ ...u, _id: u.id })));
+    console.log(`[MongoDB] Connected to ${DB_NAME}`);
+    if (await db.collection('products').countDocuments() === 0) {
+      await db.collection('products').insertMany(memoryProducts);
     }
-  } catch (err) {
-    console.log('[MongoClient] MongoDB offline. Seamless JSON fallback active.');
-    isMongoConnected = false;
-  }
-}
+    if (await db.collection('users').countDocuments() === 0) {
+      await db.collection('users').insertMany(memoryUsers);
+    }
+  })
+  .catch(() => console.log('[MongoDB] Offline - Using memory'));
 
-// Products API
+// --- PRODUCTS API ---
 app.get('/api/products', async (req, res) => {
-  try {
-    if (isMongoConnected && db) {
-      const items = await db.collection('products').find({}).toArray();
-      return res.json(items.map(p => ({ ...p, id: String(p._id) })));
-    }
-    res.json(memoryData.products);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  if (db) return res.json(await db.collection('products').find().toArray());
+  res.json(memoryProducts);
 });
 
 app.post('/api/products', async (req, res) => {
-  try {
-    const { name, category, price, stock, description } = req.body;
-    if (!name || !price) return res.status(400).json({ error: 'Name and price required' });
-    const newP = {
-      name,
-      category: category || 'Electronics',
-      price: Number(price),
-      stock: Number(stock) || 0,
-      description: description || '',
-      createdAt: new Date()
-    };
-    if (isMongoConnected && db) {
-      const result = await db.collection('products').insertOne(newP);
-      return res.status(201).json({ ...newP, id: String(result.insertedId) });
-    }
-    newP.id = 'prod_' + Date.now();
-    memoryData.products.unshift(newP);
-    saveFallback();
-    res.status(201).json(newP);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const { name, price, stock, category } = req.body;
+  if (!name || Number(price) <= 0 || Number(stock) < 0) {
+    return res.status(400).json({ error: 'Price must be > 0 and stock >= 0' });
   }
-});
-
-app.put('/api/products/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { name, category, price, stock, description } = req.body;
-    const updateData = { name, category, price: Number(price), stock: Number(stock), description };
-    if (isMongoConnected && db) {
-      let filter = { _id: id };
-      try { filter = { $or: [{ _id: new ObjectId(id) }, { _id: id }] }; } catch(e){}
-      await db.collection('products').updateOne(filter, { $set: updateData });
-      const updated = await db.collection('products').findOne(filter);
-      return res.json({ ...updated, id: String(updated._id) });
-    }
-    const idx = memoryData.products.findIndex(p => String(p.id) === String(id));
-    if (idx !== -1) {
-      memoryData.products[idx] = { ...memoryData.products[idx], ...updateData };
-      saveFallback();
-      return res.json(memoryData.products[idx]);
-    }
-    res.status(404).json({ error: 'Product not found' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const prod = { name, price: Number(price), stock: Number(stock), category: category || 'General', _id: new ObjectId().toString() };
+  if (db) await db.collection('products').insertOne(prod);
+  else memoryProducts.push(prod);
+  res.status(201).json(prod);
 });
 
 app.delete('/api/products/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    if (isMongoConnected && db) {
-      let filter = { _id: id };
-      try { filter = { $or: [{ _id: new ObjectId(id) }, { _id: id }] }; } catch(e){}
-      await db.collection('products').deleteOne(filter);
-      return res.json({ message: 'Product deleted' });
-    }
-    memoryData.products = memoryData.products.filter(p => String(p.id) !== String(id));
-    saveFallback();
-    res.json({ message: 'Product deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const { id } = req.params;
+  if (db) await db.collection('products').deleteOne({ _id: id });
+  else memoryProducts = memoryProducts.filter(p => p._id !== id);
+  res.json({ message: 'Deleted' });
 });
 
-// Users API
+// --- USERS API ---
 app.get('/api/users', async (req, res) => {
-  try {
-    if (isMongoConnected && db) {
-      const users = await db.collection('users').find({}).toArray();
-      return res.json(users.map(u => ({ ...u, id: String(u._id) })));
-    }
-    res.json(memoryData.users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  if (db) return res.json(await db.collection('users').find().toArray());
+  res.json(memoryUsers);
 });
 
 app.post('/api/users', async (req, res) => {
-  try {
-    const { name, email, phone, role } = req.body;
-    if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
-    const newU = {
-      name,
-      email,
-      phone: phone || '',
-      role: role || 'Customer',
-      createdAt: new Date()
-    };
-    if (isMongoConnected && db) {
-      const result = await db.collection('users').insertOne(newU);
-      return res.status(201).json({ ...newU, id: String(result.insertedId) });
-    }
-    newU.id = 'usr_' + Date.now();
-    memoryData.users.unshift(newU);
-    saveFallback();
-    res.status(201).json(newU);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const { name, email, phone } = req.body;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^\d{10}$/;
+  if (!emailRegex.test(email) || !phoneRegex.test(phone)) {
+    return res.status(400).json({ error: 'Invalid email or 10-digit phone number' });
   }
-});
-
-app.put('/api/users/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { name, email, phone, role } = req.body;
-    const updateData = { name, email, phone, role };
-    if (isMongoConnected && db) {
-      let filter = { _id: id };
-      try { filter = { $or: [{ _id: new ObjectId(id) }, { _id: id }] }; } catch(e){}
-      await db.collection('users').updateOne(filter, { $set: updateData });
-      const updated = await db.collection('users').findOne(filter);
-      return res.json({ ...updated, id: String(updated._id) });
-    }
-    const idx = memoryData.users.findIndex(u => String(u.id) === String(id));
-    if (idx !== -1) {
-      memoryData.users[idx] = { ...memoryData.users[idx], ...updateData };
-      saveFallback();
-      return res.json(memoryData.users[idx]);
-    }
-    res.status(404).json({ error: 'User not found' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const user = { name, email, phone, _id: new ObjectId().toString() };
+  if (db) await db.collection('users').insertOne(user);
+  else memoryUsers.push(user);
+  res.status(201).json(user);
 });
 
 app.delete('/api/users/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    if (isMongoConnected && db) {
-      let filter = { _id: id };
-      try { filter = { $or: [{ _id: new ObjectId(id) }, { _id: id }] }; } catch(e){}
-      await db.collection('users').deleteOne(filter);
-      return res.json({ message: 'User deleted' });
-    }
-    memoryData.users = memoryData.users.filter(u => String(u.id) !== String(id));
-    saveFallback();
-    res.json({ message: 'User deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const { id } = req.params;
+  if (db) await db.collection('users').deleteOne({ _id: id });
+  else memoryUsers = memoryUsers.filter(u => u._id !== id);
+  res.json({ message: 'Deleted' });
 });
 
-
-// Catch-all route to serve the React frontend for client-side routing
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'Endpoint not found' });
-  }
-  const indexPath = fs.existsSync(path.join(FRONTEND_DIST, 'index.html'))
-    ? path.join(FRONTEND_DIST, 'index.html')
-    : path.join(FRONTEND_DIR, 'index.html');
-  res.sendFile(indexPath);
-});
-
-app.listen(PORT, async () => {
-  console.log('=======================================================');
-  console.log(`[Q7 Products & Users (MongoClient)] Running at: http://localhost:${PORT}`);
-  console.log('Driver: Native MongoDB MongoClient');
-  console.log('=======================================================');
-  await connectDB();
-});
+app.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`));

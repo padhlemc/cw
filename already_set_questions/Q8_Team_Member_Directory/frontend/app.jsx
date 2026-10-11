@@ -1,220 +1,87 @@
-// Dynamic API base: points to backend port 5008 if opened standalone, or relative '/api' when served by Express
-const BACKEND_PORT = 5008;
-const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== String(BACKEND_PORT)))
-  ? `http://localhost:${BACKEND_PORT}`
-  : '';
+import React, { useState, useEffect } from 'react';
 
-const { useState, useEffect, useMemo } = React;
-
-// 1. Reusable Component: Navbar (Receives totalCount via props)
-function Navbar({ totalCount }) {
+// Reusable Component 1: Navbar with Props
+function Navbar({ title, count }) {
   return (
-    <header className="navbar">
-      <div className="nav-container">
-        <div className="brand">
-          <span style={{ fontSize: '1.5rem' }}>👥</span>
-          <span>Team<strong>Directory</strong></span>
-        </div>
-        <div className="badge">Active Members: {totalCount}</div>
-      </div>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ddd', paddingBottom: 10, marginBottom: 20 }}>
+      <h2 style={{ margin: 0 }}>👥 {title}</h2>
+      <span style={{ background: '#2563eb', color: '#fff', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 'bold' }}>
+        Total: {count}
+      </span>
     </header>
   );
 }
 
-// 2. Reusable Component: FilterBar (Receives departments, activeDept, searchQuery, callbacks via props)
-function FilterBar({ departments, activeDept, onFilterChange, searchQuery, onSearchChange }) {
+// Reusable Component 2: TeamCard with Props
+function TeamCard({ member, onDelete }) {
   return (
-    <div className="filter-bar">
-      <div className="search-wrap">
-        <span className="search-icon">🔍</span>
-        <input
-          type="text"
-          placeholder="Search by name, role, or keywords..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-        {searchQuery && (
-          <button className="clear-btn" onClick={() => onSearchChange('')}>✕</button>
-        )}
-      </div>
-
-      <div className="department-pills">
-        {departments.map((dept) => (
-          <button
-            key={dept}
-            className={`dept-pill ${activeDept === dept ? 'active' : ''}`}
-            onClick={() => onFilterChange(dept)}
-          >
-            {dept}
-          </button>
-        ))}
+    <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 15, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      <h4 style={{ margin: '0 0 4px', color: '#1e293b' }}>{member.name}</h4>
+      <p style={{ margin: '0 0 4px', color: '#2563eb', fontSize: 13, fontWeight: 'bold' }}>{member.role}</p>
+      <p style={{ margin: '0 0 6px', color: '#64748b', fontSize: 13 }}>📧 {member.email}</p>
+      <p style={{ margin: '0 0 10px', fontSize: 12, background: '#f1f5f9', padding: '3px 6px', borderRadius: 4, display: 'inline-block' }}>
+        🛠 {member.skills || 'General'}
+      </p>
+      <div>
+        <button
+          onClick={() => onDelete(member._id)}
+          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+        >
+          Remove
+        </button>
       </div>
     </div>
   );
 }
 
-// 3. Reusable Component: TeamCard (Receives member object and onSelect handler via props)
-function TeamCard({ member, onSelect }) {
-  return (
-    <div className="team-card" onClick={() => onSelect(member)}>
-      <div className="card-top">
-        <div className="avatar-wrapper">
-          <img
-            src={member.photo}
-            alt={member.name}
-            className="avatar-img"
-            loading="lazy"
-          />
-          <span className="department-badge">{member.department}</span>
-        </div>
-        <div className="member-info">
-          <h3 className="member-name">{member.name}</h3>
-          <p className="member-title">{member.jobTitle}</p>
-        </div>
-      </div>
-
-      <p className="member-bio-snippet">{member.bio}</p>
-
-      <div className="skills-container">
-        {(member.skills || []).slice(0, 3).map((skill) => (
-          <span key={skill} className="skill-tag">{skill}</span>
-        ))}
-        {member.skills && member.skills.length > 3 && (
-          <span className="skill-tag more">+{member.skills.length - 3}</span>
-        )}
-      </div>
-
-      <button className="view-profile-btn">
-        View Complete Profile →
-      </button>
-    </div>
-  );
-}
-
-// 4. Reusable Component: MemberModal (Receives member and onClose handler via props)
-function MemberModal({ member, onClose }) {
-  if (!member) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={onClose}>✕</button>
-
-        <div className="modal-header">
-          <img src={member.photo} alt={member.name} className="modal-avatar" />
-          <div>
-            <span className="department-badge">{member.department}</span>
-            <h2 className="modal-name">{member.name}</h2>
-            <p className="modal-title">{member.jobTitle}</p>
-            <p className="modal-email">📧 {member.email}</p>
-          </div>
-        </div>
-
-        <div className="modal-body">
-          <div className="modal-section">
-            <h4>Biography & Background</h4>
-            <p>{member.bio}</p>
-          </div>
-
-          <div className="modal-section">
-            <h4>Core Technical Skills & Expertise</h4>
-            <div className="skills-container">
-              {(member.skills || []).map((skill) => (
-                <span key={skill} className="skill-tag skill-lg">{skill}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 5. Parent App Component: State Management & Props Distribution
-function App() {
+export default function App() {
   const [members, setMembers] = useState([]);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [activeDept, setActiveDept] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [form, setForm] = useState({ name: '', role: '', email: '', skills: '' });
 
-  // Fetch team members from Express API backend
-  useEffect(() => {
-    fetch(`${API_BASE}/api/members`)
-      .then((res) => res.json())
-      .then((data) => setMembers(data))
-      .catch((err) => console.error('Error fetching members:', err));
-  }, []);
+  const loadMembers = async () => {
+    const res = await fetch('/api/members');
+    setMembers(await res.json());
+  };
 
-  // Compute unique departments for FilterBar
-  const departments = useMemo(() => {
-    const depts = new Set(members.map((m) => m.department));
-    return ['All', ...Array.from(depts)];
-  }, [members]);
+  useEffect(() => { loadMembers(); }, []);
 
-  // Filter members based on props
-  const filteredMembers = useMemo(() => {
-    return members.filter((m) => {
-      const matchesDept = activeDept === 'All' || m.department === activeDept;
-      const matchesSearch =
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.jobTitle.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesDept && matchesSearch;
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
     });
-  }, [members, activeDept, searchQuery]);
+    setForm({ name: '', role: '', email: '', skills: '' });
+    loadMembers();
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    loadMembers();
+  };
 
   return (
-    <div className="app-container">
-      {/* Passing totalCount prop to Navbar */}
-      <Navbar totalCount={members.length} />
+    <div style={{ maxWidth: 850, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <Navbar title="Team Member Directory (Reusable Components)" count={members.length} />
 
-      <main className="main-content">
-        <div className="hero-header">
-          <h1>Meet Our Exceptional Team</h1>
-          <p>Explore our multidisciplinary experts across Engineering, Design, Product, and AI.</p>
-        </div>
+      {/* Add Form */}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 25, background: '#f8fafc', padding: 15, borderRadius: 6, border: '1px solid #e2e8f0' }}>
+        <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Job Role" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Skills (e.g. React, Node)" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ padding: 8, flex: 1 }} />
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Add Member
+        </button>
+      </form>
 
-        {/* Passing props to reusable FilterBar */}
-        <FilterBar
-          departments={departments}
-          activeDept={activeDept}
-          onFilterChange={setActiveDept}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-
-        {/* Rendering TeamCard items by passing props */}
-        <div className="cards-grid">
-          {filteredMembers.length > 0 ? (
-            filteredMembers.map((member) => (
-              <TeamCard
-                key={member.id}
-                member={member}
-                onSelect={(m) => setSelectedMember(m)}
-              />
-            ))
-          ) : (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-              No team members match your criteria.
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Passing member and onClose props to MemberModal */}
-      <MemberModal
-        member={selectedMember}
-        onClose={() => setSelectedMember(null)}
-      />
-
-      <footer className="footer">
-        <div className="footer-container">
-          <p>OST Lab IA-2 (Text Doc Q2) | Stack: React 18 Reusable Components + Props + Express Backend</p>
-        </div>
-      </footer>
+      {/* Grid of Team Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 15 }}>
+        {members.map(m => (
+          <TeamCard key={m._id} member={m} onDelete={handleDelete} />
+        ))}
+      </div>
     </div>
   );
 }
-
-// Mount React Root
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);

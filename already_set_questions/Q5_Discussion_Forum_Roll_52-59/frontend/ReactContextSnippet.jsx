@@ -3,7 +3,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 // 1. Initial State
 const initialState = {
   posts: [],
-  currentUser: { username: 'aryan_c', name: 'Aryan Chaurasia', avatar: '👨‍💻' },
+  currentUser: { username: 'student_dev', name: 'Student Developer', avatar: '👨‍💻' },
   activeCategory: 'All',
   loading: false
 };

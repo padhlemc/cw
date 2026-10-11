@@ -1,79 +1,87 @@
-import React, { useState, useMemo } from 'react';
-import Navbar from './components/Navbar';
-import FilterBar from './components/FilterBar';
-import TeamCard from './components/TeamCard';
-import MemberModal from './components/MemberModal';
-import { teamMembers } from './data/teamData';
+import React, { useState, useEffect } from 'react';
+
+// Reusable Component 1: Navbar with Props
+function Navbar({ title, count }) {
+  return (
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ddd', paddingBottom: 10, marginBottom: 20 }}>
+      <h2 style={{ margin: 0 }}>👥 {title}</h2>
+      <span style={{ background: '#2563eb', color: '#fff', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 'bold' }}>
+        Total: {count}
+      </span>
+    </header>
+  );
+}
+
+// Reusable Component 2: TeamCard with Props
+function TeamCard({ member, onDelete }) {
+  return (
+    <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 15, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      <h4 style={{ margin: '0 0 4px', color: '#1e293b' }}>{member.name}</h4>
+      <p style={{ margin: '0 0 4px', color: '#2563eb', fontSize: 13, fontWeight: 'bold' }}>{member.role}</p>
+      <p style={{ margin: '0 0 6px', color: '#64748b', fontSize: 13 }}>📧 {member.email}</p>
+      <p style={{ margin: '0 0 10px', fontSize: 12, background: '#f1f5f9', padding: '3px 6px', borderRadius: 4, display: 'inline-block' }}>
+        🛠 {member.skills || 'General'}
+      </p>
+      <div>
+        <button
+          onClick={() => onDelete(member._id)}
+          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [activeDept, setActiveDept] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [members, setMembers] = useState([]);
+  const [form, setForm] = useState({ name: '', role: '', email: '', skills: '' });
 
-  // Extract unique departments for FilterBar props
-  const departments = useMemo(() => {
-    const depts = new Set(teamMembers.map(m => m.department));
-    return ['All', ...Array.from(depts)];
-  }, []);
+  const loadMembers = async () => {
+    const res = await fetch('/api/members');
+    setMembers(await res.json());
+  };
 
-  // Filtered members list
-  const filteredMembers = useMemo(() => {
-    return teamMembers.filter((m) => {
-      const matchesDept = activeDept === 'All' || m.department === activeDept;
-      const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            m.jobTitle.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesDept && matchesSearch;
+  useEffect(() => { loadMembers(); }, []);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
     });
-  }, [activeDept, searchQuery]);
+    setForm({ name: '', role: '', email: '', skills: '' });
+    loadMembers();
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    loadMembers();
+  };
 
   return (
-    <div className="app-container">
-      {/* 1. Reusable Navbar receiving props */}
-      <Navbar totalCount={teamMembers.length} />
+    <div style={{ maxWidth: 850, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <Navbar title="Team Member Directory (Reusable Components)" count={members.length} />
 
-      <main className="main-content">
-        <div className="hero-header">
-          <h1>Meet Our Exceptional Team</h1>
-          <p>Explore our multidisciplinary experts across Engineering, Design, Product, and AI.</p>
-        </div>
+      {/* Add Form */}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 25, background: '#f8fafc', padding: 15, borderRadius: 6, border: '1px solid #e2e8f0' }}>
+        <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Job Role" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={{ padding: 8, flex: 1 }} />
+        <input placeholder="Skills (e.g. React, Node)" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ padding: 8, flex: 1 }} />
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Add Member
+        </button>
+      </form>
 
-        {/* 2. Reusable FilterBar receiving props */}
-        <FilterBar
-          departments={departments}
-          activeDept={activeDept}
-          onFilterChange={setActiveDept}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-
-        {/* 3. Reusable TeamCard grid rendering props */}
-        <div className="cards-grid">
-          {filteredMembers.length > 0 ? (
-            filteredMembers.map((member) => (
-              <TeamCard
-                key={member.id}
-                member={member}
-                onSelect={(m) => setSelectedMember(m)}
-              />
-            ))
-          ) : (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-              <h3>No team members match your criteria.</h3>
-              <p>Try searching with another name or resetting the department filter.</p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* 4. Reusable MemberModal receiving props */}
-      <MemberModal
-        member={selectedMember}
-        onClose={() => setSelectedMember(null)}
-      />
-
-      <footer className="footer">
-        <p>OST Lab IA-2 (Question 2) | Stack: React + Vite with Reusable Components and Props</p>
-      </footer>
+      {/* Grid of Team Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 15 }}>
+        {members.map(m => (
+          <TeamCard key={m._id} member={m} onDelete={handleDelete} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,355 +1,131 @@
-import React, { useState, useEffect } from 'react';
-
 /**
- * ============================================================================
- * 🎓 UNIVERSAL FULL-STACK REACT 18 DASHBOARD
- * ============================================================================
- * Features:
- * - Reactive Form Handling with Add & Edit mode
- * - Live REST API sync (GET, POST, PUT, DELETE)
- * - Real-time Full-Text Search and Category Filtering
- * - Dynamic Summary Metric Cards (Total, Active, Custom KPIs)
- * - Responsive Modern UI with Status Badges and Action Controls
- *
- * THE "ONLY CHANGE 4 PLACES" RULE:
- * 1. CHANGE ZONE 1: Dashboard Title & Initial Form Fields
- * 2. CHANGE ZONE 2: Summary Metric KPI Calculations
- * 3. CHANGE ZONE 3: Form Input Controls
- * 4. CHANGE ZONE 4: Table Column Headers & Row Display
- * ============================================================================
+ * ==============================================================================
+ * 🎓 EXAM CHEAT-SHEET: MINIMAL REACT 18 DASHBOARD
+ * ==============================================================================
+ * Examiner Marking Points:
+ * 1. React State Hooks: useState (for items list, form inputs, search)
+ * 2. React Lifecycle: useEffect (fetching data automatically on component mount)
+ * 3. Controlled Form: value={form.title} and onChange={e => setForm(...)}
+ * 4. API Calls: fetch() with GET, POST, DELETE methods
+ * 5. Rendering: items.map() to display table rows with unique key
+ * ==============================================================================
  */
 
-/* ============================================================================
- * ✏️ [CHANGE ZONE 1: TITLE & FORM INITIAL STATE]
- * Match these fields to your exam question (e.g., plot, moisture, cropStage, etc.)
- * ============================================================================ */
-const PAGE_TITLE = 'Universal Exam Dashboard';
-const PAGE_SUBTITLE = 'Full-Stack Node.js + Express + React 18 + MongoDB / Offline Fallback';
-const API_URL = '/api/items'; // e.g. '/api/items', '/api/climate', '/api/plots'
+import React, { useState, useEffect } from 'react';
 
-const INITIAL_FORM = {
-  title: '',
-  category: 'General',
-  status: 'Active',
-  description: ''
-};
-
-function App() {
+export default function App() {
+  // 1. STATE: Store list of items from database
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // 2. STATE: Form inputs (match these fields to your exam prompt)
+  const [form, setForm] = useState({ title: '', category: 'General', status: 'Active' });
+
+  // 3. STATE: Real-time search query
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [editingId, setEditingId] = useState(null);
-  const [notification, setNotification] = useState(null);
 
-  // --------------------------------------------------------------------------
-  // Notification Toast Helper
-  // --------------------------------------------------------------------------
-  const notify = (msg, type = 'success') => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  // --------------------------------------------------------------------------
-  // API: FETCH ALL RECORDS
-  // --------------------------------------------------------------------------
+  // 4. API HELPER: Fetch items from backend via GET /api/items
   const loadData = async () => {
     try {
-      setLoading(true);
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const res = await fetch('/api/items');
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      notify('Failed to load records from backend', 'error');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('Fetch error:', e);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // 5. LIFECYCLE: Run loadData() once when page loads (empty dependency array [])
+  useEffect(() => { loadData(); }, []);
 
-  // --------------------------------------------------------------------------
-  // API: SUBMIT FORM (CREATE / UPDATE)
-  // --------------------------------------------------------------------------
+  // 6. FORM HANDLER: Submit new item via POST /api/items
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const isEdit = Boolean(editingId);
-    const method = isEdit ? 'PUT' : 'POST';
-    const url = isEdit ? `${API_URL}/${editingId}` : API_URL;
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-
-      if (!res.ok) throw new Error('Failed to save record');
-
-      notify(isEdit ? 'Record updated successfully!' : 'Record created successfully!');
-      setForm(INITIAL_FORM);
-      setEditingId(null);
-      loadData();
-    } catch (err) {
-      notify(err.message, 'error');
-    }
+    e.preventDefault(); // Prevents standard browser page reload
+    await fetch('/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    });
+    setForm({ title: '', category: 'General', status: 'Active' }); // Reset form
+    loadData(); // Refresh list to show newly added item
   };
 
-  // --------------------------------------------------------------------------
-  // EDIT & CANCEL
-  // --------------------------------------------------------------------------
-  const handleEdit = (item) => {
-    setEditingId(item.id);
-    setForm(item);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setForm(INITIAL_FORM);
-  };
-
-  // --------------------------------------------------------------------------
-  // API: DELETE RECORD
-  // --------------------------------------------------------------------------
+  // 7. ACTION HANDLER: Delete item by ID via DELETE /api/items/:id
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
-
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete record');
-      notify('Record deleted successfully!');
-      loadData();
-    } catch (err) {
-      notify(err.message, 'error');
-    }
+    await fetch(`/api/items/${id}`, { method: 'DELETE' });
+    loadData(); // Refresh list after deletion
   };
 
-  /* ============================================================================
-   * ✏️ [CHANGE ZONE 2: SUMMARY METRIC CALCULATIONS]
-   * Compute 3-4 quick stats cards to impress examiners.
-   * ============================================================================ */
-  const totalCount = items.length;
-  const activeCount = items.filter(i => (i.status || '').toLowerCase() === 'active').length;
-  const pendingCount = items.filter(i => (i.status || '').toLowerCase() === 'pending').length;
-  const urgentCount = items.filter(i => (i.category || '').toLowerCase() === 'urgent').length;
-
-  // --------------------------------------------------------------------------
-  // FILTER & SEARCH LOGIC
-  // --------------------------------------------------------------------------
-  const filteredItems = items.filter(item => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const q = search.toLowerCase();
-    const matchesSearch = !search || Object.values(item).some(
-      val => typeof val === 'string' && val.toLowerCase().includes(q)
-    );
-    return matchesCategory && matchesSearch;
-  });
+  // 8. FILTER: Filter records matching current search query
+  const filtered = items.filter(item =>
+    (item.title || '').toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="container">
-      {/* HEADER */}
-      <header className="dashboard-header">
-        <div>
-          <h1>{PAGE_TITLE}</h1>
-          <p className="subtitle">{PAGE_SUBTITLE}</p>
-        </div>
-        <div className="badge badge-green">● Backend Live</div>
-      </header>
+    <div style={{ maxWidth: 800, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <h2>🎓 Exam Starter Dashboard</h2>
 
-      {/* NOTIFICATION TOAST */}
-      {notification && (
-        <div className={`notification-banner ${notification.type === 'error' ? 'alert-danger' : 'alert-success'}`}>
-          {notification.msg}
-        </div>
-      )}
+      {/* --- FORM SECTION: Controlled Input Fields --- */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <input
+          placeholder="Title"
+          value={form.title}
+          onChange={e => setForm({ ...form, title: e.target.value })}
+          required
+          style={{ flex: 1, padding: 8 }}
+        />
+        <select
+          value={form.category}
+          onChange={e => setForm({ ...form, category: e.target.value })}
+          style={{ padding: 8 }}
+        >
+          <option>General</option>
+          <option>Urgent</option>
+          <option>Optional</option>
+        </select>
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Add Item
+        </button>
+      </form>
 
-      {/* STATS METRIC CARDS */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-value">{totalCount}</div>
-          <div className="stat-label">Total Records</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value stat-green">{activeCount}</div>
-          <div className="stat-label">Active Items</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value stat-yellow">{pendingCount}</div>
-          <div className="stat-label">Pending Review</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value stat-red">{urgentCount}</div>
-          <div className="stat-label">Urgent Priority</div>
-        </div>
-      </div>
+      {/* --- SEARCH FILTER SECTION --- */}
+      <input
+        placeholder="Search records by title..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ width: '100%', boxSizing: 'border-box', padding: 8, marginBottom: 15 }}
+      />
 
-      {/* FORM CARD */}
-      <div className="card form-box">
-        <div className="card-header">
-          <h2>{editingId ? '✏️ Edit Record' : '➕ Add New Record'}</h2>
-          {editingId && (
-            <span className="badge badge-yellow">Editing ID: {editingId}</span>
+      {/* --- DATA TABLE SECTION: items.map() --- */}
+      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(item => (
+            <tr key={item._id || item.id}>
+              <td>{item.title}</td>
+              <td>{item.category}</td>
+              <td>{item.status}</td>
+              <td>
+                <button
+                  onClick={() => handleDelete(item._id || item.id)}
+                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {filtered.length === 0 && (
+            <tr><td colSpan="4" style={{ textAlign: 'center' }}>No items found.</td></tr>
           )}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* ================================================================
-           * ✏️ [CHANGE ZONE 3: FORM INPUT CONTROLS]
-           * Modify the input fields below to match your question requirements.
-           * ================================================================ */}
-          <div className="form-row">
-            <div className="form-group flex-2">
-              <label>Title / Identifier *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Plot #101 / Heatwave Alpha / Sample Item"
-                value={form.title || ''}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group flex-1">
-              <label>Category / Type</label>
-              <select
-                value={form.category || 'General'}
-                onChange={e => setForm({ ...form, category: e.target.value })}
-              >
-                <option value="General">General</option>
-                <option value="Urgent">Urgent</option>
-                <option value="Agriculture">Agriculture</option>
-                <option value="Climate">Climate</option>
-              </select>
-            </div>
-
-            <div className="form-group flex-1">
-              <label>Status</label>
-              <select
-                value={form.status || 'Active'}
-                onChange={e => setForm({ ...form, status: e.target.value })}
-              >
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Description / Additional Notes</label>
-            <textarea
-              rows="2"
-              placeholder="Enter details, sensor telemetry, observation notes..."
-              value={form.description || ''}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              {editingId ? '💾 Update Record' : '🚀 Save Record'}
-            </button>
-            {editingId && (
-              <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
-                ✖ Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
-      {/* SEARCH & FILTER CONTROLS */}
-      <div className="controls-bar">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="🔍 Full-text search across all fields..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="category-filter">
-          <label>Filter:</label>
-          <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
-            <option value="All">All Categories</option>
-            <option value="General">General</option>
-            <option value="Urgent">Urgent</option>
-            <option value="Agriculture">Agriculture</option>
-            <option value="Climate">Climate</option>
-          </select>
-        </div>
-      </div>
-
-      {/* DATA TABLE */}
-      <div className="card table-card">
-        <div className="card-header">
-          <h2>📋 Records List ({filteredItems.length})</h2>
-          <button className="btn btn-small btn-secondary" onClick={loadData}>
-            🔄 Refresh
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="loading-state">Loading data from backend...</div>
-        ) : filteredItems.length === 0 ? (
-          <div className="empty-state">No records found matching your filters.</div>
-        ) : (
-          <div className="table-responsive">
-            <table>
-              {/* ============================================================
-               * ✏️ [CHANGE ZONE 4: TABLE HEADERS & ROW CELLS]
-               * Match table headers and table data cells to your schema.
-               * ============================================================ */}
-              <thead>
-                <tr>
-                  <th>Title / Name</th>
-                  <th>Category</th>
-                  <th>Status</th>
-                  <th>Details</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map(item => (
-                  <tr key={item.id}>
-                    <td>
-                      <strong>{item.title || item.name || '-'}</strong>
-                    </td>
-                    <td>{item.category || '-'}</td>
-                    <td>
-                      <span className={`badge ${
-                        (item.status || '').toLowerCase() === 'active' ? 'badge-green' :
-                        (item.status || '').toLowerCase() === 'completed' ? 'badge-blue' :
-                        'badge-yellow'
-                      }`}>
-                        {item.status || 'Active'}
-                      </span>
-                    </td>
-                    <td>{item.description || item.region || item.notes || '-'}</td>
-                    <td className="actions">
-                      <button className="btn btn-warning btn-small" onClick={() => handleEdit(item)}>
-                        Edit
-                      </button>
-                      <button className="btn btn-danger btn-small" onClick={() => handleDelete(item.id)}>
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }
-
-export default App;

@@ -1,382 +1,111 @@
-// Dynamic API base: points to backend port 5004 if opened standalone, or relative '/api' when served by Express
-const BACKEND_PORT = 5004;
-const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== String(BACKEND_PORT)))
-  ? `http://localhost:${BACKEND_PORT}`
-  : '';
+import React, { useState, useEffect } from 'react';
 
-const { useState, useEffect, useMemo } = React;
-
-// Toast notification component
-function Toast({ message, onClose }) {
-  if (!message) return null;
-  return (
-    <div className="toast show" onClick={onClose}>
-      {message}
-    </div>
-  );
-}
-
-// Navigation Bar Component
-function Navbar({ totalTasks, completedCount, completionRate }) {
-  return (
-    <header className="navbar">
-      <div className="nav-container">
-        <div className="brand">
-          <span className="brand-icon">✅</span>
-          <span className="brand-title">Task<strong>Master</strong></span>
-        </div>
-        <div className="badge-header">
-          {completedCount} of {totalTasks} Completed ({completionRate}%)
-        </div>
-      </div>
-    </header>
-  );
-}
-
-// Main App Component
-function App() {
+export default function App() {
   const [tasks, setTasks] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [toastMessage, setToastMessage] = useState('');
-  const [editingTask, setEditingTask] = useState(null);
+  const [form, setForm] = useState({ title: '', priority: 'Medium' });
+  const [filter, setFilter] = useState('All');
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    priority: 'Medium',
-    status: 'Pending',
-    dueDate: new Date().toISOString().split('T')[0]
-  });
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/tasks`);
-      const data = await res.json();
-      setTasks(data);
-    } catch (err) {
-      showToast('Error connecting to backend: ' + err.message);
-    }
+  const loadTasks = async () => {
+    const res = await fetch('/api/tasks');
+    setTasks(await res.json());
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
+  useEffect(() => { loadTasks(); }, []);
 
-  const completedCount = tasks.filter((t) => t.status === 'Completed').length;
-  const completionRate = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
-
-  // Filter tasks
-  const filteredTasks = useMemo(() => {
-    if (activeFilter === 'Pending') {
-      return tasks.filter((t) => t.status === 'Pending' || t.status === 'In Progress');
-    }
-    if (activeFilter === 'Completed') {
-      return tasks.filter((t) => t.status === 'Completed');
-    }
-    if (activeFilter === 'High Priority') {
-      return tasks.filter((t) => t.priority === 'High');
-    }
-    return tasks;
-  }, [tasks, activeFilter]);
-
-  const handleSubmit = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      showToast('Please enter a task title.');
-      return;
-    }
-
-    try {
-      if (editingTask) {
-        // PUT update
-        const id = editingTask.id || editingTask._id;
-        const res = await fetch(`${API_BASE}/api/tasks/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        if (!res.ok) throw new Error('Failed to update task');
-        const updated = await res.json();
-        setTasks((prev) =>
-          prev.map((t) => ((t.id || t._id) === id ? updated : t))
-        );
-        showToast('Task updated successfully!');
-        setEditingTask(null);
-      } else {
-        // POST create
-        const res = await fetch(`${API_BASE}/api/tasks`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        if (!res.ok) throw new Error('Failed to create task');
-        const created = await res.json();
-        setTasks((prev) => [created, ...prev]);
-        showToast('New task added successfully!');
-      }
-
-      setFormData({
-        title: '',
-        description: '',
-        priority: 'Medium',
-        status: 'Pending',
-        dueDate: new Date().toISOString().split('T')[0]
-      });
-    } catch (err) {
-      showToast('Error: ' + err.message);
-    }
-  };
-
-  const handleToggle = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/tasks/${id}/toggle`, { method: 'PATCH' });
-      if (!res.ok) throw new Error('Failed to toggle task');
-      const updated = await res.json();
-      setTasks((prev) =>
-        prev.map((t) => ((t.id || t._id) === id ? updated : t))
-      );
-      showToast(`Task status toggled to "${updated.status}".`);
-    } catch (err) {
-      showToast('Error: ' + err.message);
-    }
-  };
-
-  const handleEdit = (task) => {
-    setEditingTask(task);
-    setFormData({
-      title: task.title,
-      description: task.description || '',
-      priority: task.priority || 'Medium',
-      status: task.status || 'Pending',
-      dueDate: task.dueDate || new Date().toISOString().split('T')[0]
+    await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setForm({ title: '', priority: 'Medium' });
+    loadTasks();
   };
 
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Delete task "${title}"?`)) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/tasks/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete task');
-      setTasks((prev) => prev.filter((t) => (t.id || t._id) !== id));
-      showToast('Task deleted successfully.');
-      if (editingTask && (editingTask.id || editingTask._id) === id) {
-        setEditingTask(null);
-      }
-    } catch (err) {
-      showToast('Error: ' + err.message);
-    }
+  const handleToggleStatus = async (task) => {
+    const nextStatus = task.status === 'Completed' ? 'Pending' : (task.status === 'Pending' ? 'In Progress' : 'Completed');
+    await fetch(`/api/tasks/${task._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus })
+    });
+    loadTasks();
   };
 
-  const getPriorityClass = (priority) => {
-    if (priority === 'High') return 'badge-priority badge-high';
-    if (priority === 'Low') return 'badge-priority badge-low';
-    return 'badge-priority badge-medium';
+  const handleDelete = async (id) => {
+    await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    loadTasks();
   };
 
-  const getStatusClass = (status) => {
-    if (status === 'Completed') return 'badge-status status-completed';
-    if (status === 'In Progress') return 'badge-status status-progress';
-    return 'badge-status status-pending';
-  };
+  const filtered = tasks.filter(t => filter === 'All' || t.status === filter);
 
   return (
-    <div id="app">
-      <Navbar
-        totalTasks={tasks.length}
-        completedCount={completedCount}
-        completionRate={completionRate}
-      />
+    <div style={{ maxWidth: 800, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <h2>📝 Daily Task Manager (Roll 46-51, 70)</h2>
 
-      <main className="content-container">
-        {/* Create / Edit Task Form */}
-        <section className="card form-card">
-          <h3 className="card-title">
-            {editingTask ? '✏️ Update Task' : '➕ Create New Daily Task'}
-          </h3>
-          <form onSubmit={handleSubmit} className="task-form">
-            <div className="form-group">
-              <label>Task Title *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Complete OST Lab Exercise 4"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-            </div>
+      {/* Form */}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <input placeholder="New task title..." value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required style={{ flex: 1, padding: 8 }} />
+        <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} style={{ padding: 8 }}>
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Add Task
+        </button>
+      </form>
 
-            <div className="form-group">
-              <label>Task Description (optional)</label>
-              <textarea
-                rows="2"
-                placeholder="Details, acceptance criteria, or notes..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 15 }}>
+        {['All', 'Pending', 'In Progress', 'Completed'].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            style={{ padding: '6px 12px', background: filter === f ? '#2563eb' : '#f1f5f9', color: filter === f ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer' }}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Priority Level</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                >
-                  <option value="Low">🟢 Low Priority</option>
-                  <option value="Medium">🟡 Medium Priority</option>
-                  <option value="High">🔴 High Priority</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Initial Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  <option value="Pending">⏳ Pending</option>
-                  <option value="In Progress">🔄 In Progress</option>
-                  <option value="Completed">✅ Completed</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Due Date</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                {editingTask ? 'Save Task Updates' : '+ Add Task'}
-              </button>
-              {editingTask && (
+      {/* Task Table */}
+      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th>Task</th><th>Priority</th><th>Status (Click to toggle)</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(t => (
+            <tr key={t._id}>
+              <td style={{ textDecoration: t.status === 'Completed' ? 'line-through' : 'none' }}>{t.title}</td>
+              <td>
+                <span style={{ padding: '2px 6px', borderRadius: 4, background: t.priority === 'High' ? '#fee2e2' : '#fef3c7', color: t.priority === 'High' ? '#991b1b' : '#92400e', fontSize: 12 }}>
+                  {t.priority}
+                </span>
+              </td>
+              <td>
                 <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => {
-                    setEditingTask(null);
-                    setFormData({
-                      title: '',
-                      description: '',
-                      priority: 'Medium',
-                      status: 'Pending',
-                      dueDate: new Date().toISOString().split('T')[0]
-                    });
-                  }}
+                  onClick={() => handleToggleStatus(t)}
+                  style={{ padding: '4px 8px', borderRadius: 4, border: 'none', cursor: 'pointer', background: t.status === 'Completed' ? '#dcfce7' : '#e0e7ff', color: t.status === 'Completed' ? '#166534' : '#3730a3' }}
                 >
-                  Cancel
+                  {t.status} 🔄
                 </button>
-              )}
-            </div>
-          </form>
-        </section>
-
-        {/* Filter Navigation Bar */}
-        <section className="filter-nav">
-          <div className="filter-tabs">
-            {['All', 'Pending', 'Completed', 'High Priority'].map((filter) => (
-              <button
-                key={filter}
-                className={`filter-btn ${activeFilter === filter ? 'active' : ''}`}
-                onClick={() => setActiveFilter(filter)}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-          <div className="counter-text">
-            Showing {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-          </div>
-        </section>
-
-        {/* Tasks List */}
-        <section className="tasks-list">
-          {filteredTasks.length === 0 ? (
-            <div className="empty-state">
-              <p>No tasks match this filter. Take a break or add a new task!</p>
-            </div>
-          ) : (
-            filteredTasks.map((t) => {
-              const taskId = t.id || t._id;
-              const isDone = t.status === 'Completed';
-
-              return (
-                <div
-                  key={taskId}
-                  className={`task-card ${isDone ? 'task-completed-card' : ''}`}
-                >
-                  <div className="task-checkbox-wrap">
-                    <input
-                      type="checkbox"
-                      checked={isDone}
-                      onChange={() => handleToggle(taskId)}
-                      title="Click to toggle status"
-                    />
-                  </div>
-
-                  <div className="task-body">
-                    <div className="task-header-row">
-                      <h4 className={`task-title ${isDone ? 'completed-text' : ''}`}>
-                        {t.title}
-                      </h4>
-                      <div className="task-badges">
-                        <span className={getPriorityClass(t.priority)}>{t.priority}</span>
-                        <span className={getStatusClass(t.status)}>{t.status}</span>
-                      </div>
-                    </div>
-
-                    {t.description && <p className="task-desc">{t.description}</p>}
-
-                    <div className="task-footer">
-                      <span className="due-date">📅 Due: {t.dueDate}</span>
-                      <div className="task-action-btns">
-                        <button
-                          className="btn-icon"
-                          onClick={() => handleEdit(t)}
-                          title="Edit Task"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-icon delete"
-                          onClick={() => handleDelete(taskId, t.title)}
-                          title="Delete Task"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+              </td>
+              <td>
+                <button onClick={() => handleDelete(t._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {filtered.length === 0 && (
+            <tr><td colSpan="4" style={{ textAlign: 'center' }}>No tasks found in this view.</td></tr>
           )}
-        </section>
-      </main>
-
-      <footer className="footer">
-        <div className="footer-container">
-          <p>OST Lab IA-2 (Roll No: 46 to 51, 70) | Stack: React 18 + Node.js/Express + MongoDB Task CRUD</p>
-        </div>
-      </footer>
-
-      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+        </tbody>
+      </table>
     </div>
   );
 }
-
-// Mount React Root
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);

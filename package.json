@@ -45,16 +45,16 @@
     "mongodb",
     "mongoclient"
   ],
-  "author": "Aryan Chaurasia <chaurasiaaryan1980@gmail.com>",
+  "author": "Student",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/padhlemc/hw.git"
+    "url": "git+https://github.com/padhlemc/cw.git"
   },
   "bugs": {
-    "url": "https://github.com/padhlemc/hw/issues"
+    "url": "https://github.com/padhlemc/cw/issues"
   },
-  "homepage": "https://github.com/padhlemc/hw#readme",
+  "homepage": "https://github.com/padhlemc/cw#readme",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",

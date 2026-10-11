@@ -27,6 +27,135 @@ Every application is fundamentally a **RESTful CRUD entity management system**:
 2. Serves standard RESTful endpoints (`GET`, `POST`, `PUT`, `DELETE`).
 3. Uses React 18 with reactive state (`useState`, `useEffect`) to render summary metrics, forms, and tables.
 
+
+---
+
+## ⚡ The 1-Hour Exam Master Cheat-Sheet (Write in 25 Mins Flat!)
+
+> **Allowed Libraries Only:** Node.js, Express (`express`, `cors`), Native MongoDB driver (`mongodb` - `MongoClient`, `ObjectId`), React (`react`, `react-dom`).  
+> **NO Mongoose, NO extra or complex libraries.**
+
+### 1. Minimal Exam Backend (`server.js` - 35 Lines)
+```javascript
+const express = require('express');
+const cors = require('cors');
+const { MongoClient, ObjectId } = require('mongodb');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('../frontend'));
+
+let db = null;
+let memory = [{ _id: '1', title: 'Sample Item', status: 'Active' }];
+
+const client = new MongoClient('mongodb://127.0.0.1:27017');
+client.connect().then(async () => {
+  db = client.db('exam_db');
+  if (await db.collection('items').countDocuments() === 0) {
+    await db.collection('items').insertMany(memory);
+  }
+}).catch(() => console.log('Mongo offline, using memory'));
+
+// GET
+app.get('/api/items', async (req, res) => {
+  if (db) return res.json(await db.collection('items').find().toArray());
+  res.json(memory);
+});
+
+// POST
+app.post('/api/items', async (req, res) => {
+  const item = { ...req.body, _id: new ObjectId().toString() };
+  if (db) await db.collection('items').insertOne(item);
+  else memory.push(item);
+  res.status(201).json(item);
+});
+
+// DELETE
+app.delete('/api/items/:id', async (req, res) => {
+  const { id } = req.params;
+  if (db) await db.collection('items').deleteOne({ _id: id });
+  else memory = memory.filter(x => x._id !== id);
+  res.json({ message: 'Deleted' });
+});
+
+app.listen(5000, () => console.log('Server on http://localhost:5000'));
+```
+
+### 2. Minimal Exam Frontend (`App.jsx` - 50 Lines)
+```jsx
+import React, { useState, useEffect } from 'react';
+
+export default function App() {
+  const [items, setItems] = useState([]);
+  const [form, setForm] = useState({ title: '', status: 'Active' });
+
+  const load = async () => {
+    const res = await fetch('/api/items');
+    setItems(await res.json());
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await fetch('/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    });
+    setForm({ title: '', status: 'Active' });
+    load();
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`/api/items/${id}`, { method: 'DELETE' });
+    load();
+  };
+
+  return (
+    <div style={{ maxWidth: 700, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
+      <h2>Exam Dashboard</h2>
+      
+      {/* Add Form */}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <input 
+          placeholder="Title" 
+          value={form.title} 
+          onChange={e => setForm({ ...form, title: e.target.value })} 
+          required 
+          style={{ flex: 1, padding: 8 }} 
+        />
+        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4 }}>
+          Add
+        </button>
+      </form>
+
+      {/* Items Table */}
+      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th>Title</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(it => (
+            <tr key={it._id}>
+              <td>{it.title}</td><td>{it.status}</td>
+              <td>
+                <button onClick={() => handleDelete(it._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4 }}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+```
+
 ---
 
 ## ⚡ The "Only Change 4 Places" Formula

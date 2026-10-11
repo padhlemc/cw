@@ -87,7 +87,7 @@ npm start
 | Method | Endpoint | Description | Sample Payload |
 |---|---|---|---|
 | `GET` | `/api/posts` | List all discussion threads | N/A |
-| `POST` | `/api/posts` | Create a new discussion thread | `{"title":"MERN vs Next.js","content":"Which is better for college labs?","category":"WebDev","author":{"name":"Aryan","username":"aryan_c"}}` |
+| `POST` | `/api/posts` | Create a new discussion thread | `{"title":"MERN vs Next.js","content":"Which is better for college labs?","category":"WebDev","author":{"name":"Alex","username":"alex_dev"}}` |
 | `PUT` | `/api/posts/:id/upvote` | Increment thread upvotes | N/A |
 | `DELETE` | `/api/posts/:id` | Delete discussion thread | N/A |
 | `GET` | `/api/posts/:id/comments`| List comments on a thread | N/A |

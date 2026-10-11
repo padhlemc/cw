@@ -89,7 +89,7 @@ npm start
 | `GET` | `/api/books` | Get all books (filters: `?category=...&search=...`) | N/A |
 | `POST` | `/api/books` | Add new book to inventory | `{"title":"Refactoring","author":"Martin Fowler","price":650,"category":"Programming","stock":10}` |
 | `DELETE` | `/api/books/:id` | Remove a book by ID | N/A |
-| `POST` | `/api/orders` | Place a customer order | `{"customerName":"Aryan","email":"a@test.com","items":[],"totalAmount":650}` |
+| `POST` | `/api/orders` | Place a customer order | `{"customerName":"John Doe","email":"a@test.com","items":[],"totalAmount":650}` |
 
 ### Quick Test via cURL:
 ```bash
