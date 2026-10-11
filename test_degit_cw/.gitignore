@@ -1,0 +1,91 @@
+# Dependencies
+node_modules/
+*/node_modules/
+*/*/node_modules/
+**/node_modules/
+
+# Production builds & artifacts
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+build/
+**/build/
+out/
+**/out/
+
+# Vite & cache
+.vite/
+**/.vite/
+.cache/
+**/.cache/
+.parcel-cache/
+.turbo/
+
+# Logs & debugging
+*.log
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Local database fallback / temp runtime files
+data_fallback.json
+*/data_fallback.json
+*/*/data_fallback.json
+**/data_fallback.json
+*.local.json
+mongod.lock
+
+# Compressed archives & packages
+*.tgz
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# IDE and Editor files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-project
+*.sublime-workspace
+
+# Python (if any)
+__pycache__/
+*.pyc
+*.pyo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+*~

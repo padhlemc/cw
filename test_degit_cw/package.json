@@ -1,0 +1,70 @@
+{
+  "name": "ost-ia2-solutions",
+  "version": "1.0.0",
+  "description": "Complete mock test solutions (Q1-Q9) with Express + React 18 + MongoDB Native Driver + Universal Exam Template",
+  "main": "verify_all.js",
+  "bin": {
+    "hw": "./bin/cli.js",
+    "ost": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "already_set_questions",
+    "TEMPLATE_EXAM_STARTER",
+    "README.md",
+    "UNIVERSAL_EXAM_TEMPLATE.md",
+    "EXAM_STUDY_AND_VIDEO_GUIDE.md",
+    "verify_all.js",
+    "build_all.js"
+  ],
+  "scripts": {
+    "start": "node verify_all.js",
+    "build": "node build_all.js",
+    "all": "node bin/cli.js all",
+    "verify": "node verify_all.js",
+    "test": "node verify_all.js",
+    "template": "node TEMPLATE_EXAM_STARTER/backend/server.js",
+    "template:core": "node TEMPLATE_EXAM_STARTER/backend/server_core_node.js",
+    "q1": "node already_set_questions/Q1_Book_Ecommerce_Roll_24-30/backend/server.js",
+    "q2": "node already_set_questions/Q2_Doctor_Appointment_Roll_31-38/backend/server.js",
+    "q3": "node already_set_questions/Q3_Expense_Tracker_Roll_39-45/backend/server.js",
+    "q4": "node already_set_questions/Q4_Daily_Task_Manager_Roll_46-51_70/backend/server.js",
+    "q5": "node already_set_questions/Q5_Discussion_Forum_Roll_52-59/backend/server.js",
+    "q6": "node already_set_questions/Q6_Teacher_Student_Dashboard_Roll_61-67/backend/server.js",
+    "q7": "node already_set_questions/Q7_Product_User_Management/backend/server.js",
+    "q8": "node already_set_questions/Q8_Team_Member_Directory/backend/server.js",
+    "q9": "node already_set_questions/Q9_Patient_Management/backend/server.js"
+  },
+  "keywords": [
+    "ost",
+    "web-programming",
+    "ia2",
+    "mock-test",
+    "express",
+    "react",
+    "mongodb",
+    "mongoclient"
+  ],
+  "author": "Student",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/padhlemc/cw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/padhlemc/cw/issues"
+  },
+  "homepage": "https://github.com/padhlemc/cw#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.20.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^6.4.4"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "q1-book-ecommerce-roll-24-30",
+  "version": "1.0.0",
+  "description": "Book E-Commerce Web Application (Rolls 24 to 30) - Express + React 18 + MongoDB Native MongoClient",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "backend": "cd backend && npm start",
+    "frontend": "cd frontend && npm start",
+    "build": "cd frontend && npm run build"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.20.0"
+  },
+  "keywords": [
+    "express",
+    "react",
+    "mongodb",
+    "mongoclient",
+    "ost-ia2"
+  ],
+  "author": "Student",
+  "license": "MIT"
+}
