@@ -1,431 +1,404 @@
-# 🎓 The Universal Full-Stack Exam Template & Master Guide
-> **One Master Pattern to Solve ANY Web Programming / OST Lab Exam Question in 10 Minutes!**
+# 🎓 The Universal Full-Stack Exam Handbook & Master Guide
+
+> **Master 1 Universal Template, Solve ANY Web Programming / OST Lab Exam Question in 10 Minutes!**  
+> Covers **Core Node.js (`http`, `url`, `fs`)**, **Express.js REST APIs**, **MongoDB Native Driver**, and **React 18 Dashboards**.
 
 ---
 
-## 💡 The Secret of Lab Exams: Every Question is the Same!
+## 💡 The Golden Secret: Every Lab Exam Question is the Same!
 
-Whether your question paper asks for:
-- 📚 **Book E-Commerce Store** (Title, Author, Price, Category)
-- 🩺 **Doctor Appointments** (Patient Name, Doctor, Date, Status)
-- 💰 **Expense Tracker** (Title, Amount, Category, Date)
-- 📝 **Daily Task Manager** (Title, Priority, Status, Due Date)
+Whether your exam asks for:
+- 🌡️ **Regional Temperature Monitoring Dashboard** (Region, Temperature, Humidity, Date)
+- 🔥 **Heatwave Prediction & Severity Classification** (Region, Max Temp, Severity, Heat Index)
+- 🌾 **Sugarcane Smart Irrigation System** (Farmer, Plot ID, Soil Moisture, Crop Stage, Weather, AI Recommendation)
+- 📚 **Book E-Commerce Store** (Title, Author, Price, Category, Stock)
+- 🩺 **Doctor Appointments** (Patient, Doctor, Date, Time, Status)
+- 💰 **Daily Expense Tracker** (Title, Amount, Category, Date)
+- 📝 **Daily Task Manager** (Title, Priority, Due Date, Status)
 - 💬 **Discussion Forum** (Post Title, Author, Content, Upvotes)
 - 🎓 **Student Gradebook** (Student Name, Subject Marks, Grade)
-- 📦 **Product Management** (Product Name, Price, Stock)
-- 👥 **Team Member Directory** (Name, Role, Department, Email)
-- 🏥 **Patient Management** (Name, Age, Disease, Room, Status)
+- 📦 **Product Management** (Product Name, Price, Stock, Category)
+- 👥 **Team Directory** (Name, Role, Department, Email)
+- 🏥 **Patient Health Records** (Name, Age, Disease, Status)
 
-👉 **Under the hood, 95% of the code is 100% IDENTICAL!**  
-Every question is fundamentally a **RESTful CRUD application**:
-1. Connects to MongoDB (or seamless local offline JSON fallback).
-2. Serves 4 REST API endpoints (`GET`, `POST`, `PUT`, `DELETE`).
-3. Uses React 18 via CDN (no complex Webpack / Vite build tools to fail in the exam).
-4. Displays data in a table/cards and provides a form to add/edit records.
+👉 **95% of the codebase is 100% IDENTICAL.**  
+Every application is fundamentally a **RESTful CRUD entity management system**:
+1. Connects to MongoDB (with automatic local offline JSON fallback so code **never crashes** if the lab computer has MongoDB service issues).
+2. Serves standard RESTful endpoints (`GET`, `POST`, `PUT`, `DELETE`).
+3. Uses React 18 with reactive state (`useState`, `useEffect`) to render summary metrics, forms, and tables.
 
 ---
 
-## ⚡ The "Change Only 4 Things" Formula
+## ⚡ The "Only Change 4 Places" Formula
 
-When you get an exam question, you copy the starter template and modify **ONLY 4 AREAS**:
+When given any exam problem statement, open the starter template in [`TEMPLATE_EXAM_STARTER/`](TEMPLATE_EXAM_STARTER/) and edit **ONLY 4 NUMBERED CHANGE ZONES**:
 
 ```
-                       ┌────────────────────────────────────────┐
-                       │   THE UNIVERSAL EXAM BLUEPRINT         │
-                       └───────────────────┬────────────────────┘
-                                           │
-         ┌───────────────────┬─────────────┴───────┬────────────────────┐
-         ▼                   ▼                     ▼                    ▼
-   [1. Port & Name]    [2. Dummy Data]       [3. Form Inputs]     [4. Table Columns]
-    PORT = 5001         { title, author,      <input name="title">  <th>Title</th>
-    COLLECTION='books'    price, category }   <input name="author"> <td>{item.title}</td>
+                              ┌────────────────────────────────────────┐
+                              │     THE UNIVERSAL EXAM BLUEPRINT       │
+                              └───────────────────┬────────────────────┘
+                                                  │
+            ┌───────────────────┬─────────────────┴───────┬────────────────────┐
+            ▼                   ▼                         ▼                    ▼
+     [CHANGE ZONE 1]     [CHANGE ZONE 2]           [CHANGE ZONE 3]      [CHANGE ZONE 4]
+   Port & Collection       Sample Seed Data         React Form Inputs     Table Display Cols
+     (server.js: L24)      (server.js: L41)          (App.jsx: L185)       (App.jsx: L280)
 ```
 
-| Area | File | What You Change | Example: Patient Management | Example: Expense Tracker |
+| Change Zone | File | What You Change | Example: Heatwave & Temperature | Example: Sugarcane Irrigation |
 |---|---|---|---|---|
-| **1. Port & Name** | `backend/server.js` | Change `PORT` and `COLLECTION_NAME` | `PORT = 5009`<br>`COLLECTION = 'patients'` | `PORT = 5003`<br>`COLLECTION = 'expenses'` |
-| **2. Initial Schema** | `backend/server.js` | Change fields in initial `memoryData` | `{ name, age, condition, status }` | `{ title, amount, category, date }` |
-| **3. Form Inputs** | `frontend/app.jsx` | Change `initialForm` & input tags | Name, Age, Medical Condition inputs | Title, Amount, Category inputs |
-| **4. Table Display** | `frontend/app.jsx` | Change `<th>` headers and `<td>` values | Name, Age, Condition, Status | Title, Amount, Category, Date |
+| **Zone 1: Port & Names** | `backend/server.js` | `PORT`, `DB_NAME`, `COLLECTION_NAME` | `PORT = 5000`<br>`COLLECTION = 'climate_data'` | `PORT = 5000`<br>`COLLECTION = 'irrigation_plots'` |
+| **Zone 2: Initial Schema**| `backend/server.js` | 2-3 sample items in `memoryData` | `{ region, temperature, humidity, severity }` | `{ farmer, plotId, moisture, cropStage, recommendation }` |
+| **Zone 3: Form Inputs** | `frontend/src/App.jsx` | Fields inside `<form>` | Region, Temp (°C), Humidity (%) inputs | Farmer, Plot ID, Moisture (%), Crop Stage |
+| **Zone 4: Table Display** | `frontend/src/App.jsx` | `<th>` headers and `<td>` cells | Region, Temp, Humidity, Severity Badge | Plot, Farmer, Moisture, Stage, AI Advice |
 
 ---
 
-## 📁 The Universal Architecture
+## 🛠️ Dual Backend Architecture: Choose Your Mode
 
-Every solution lives in one compact, clean folder:
+Depending on the exact phrasing of your question:
 
-```
-Your_Question_Folder/
-├── backend/
-│   ├── server.js              # ~80 lines: Express + MongoDB + JSON Fallback
-│   ├── package.json           # express, cors, mongodb
-│   └── data_fallback.json     # Automatic offline file storage
-├── frontend/
-│   ├── index.html             # React 18 + Babel loaded from CDN (zero build steps)
-│   ├── app.jsx                # Single React component: state, form, table, API calls
-│   └── style.css              # Clean, professional styling
-└── package.json               # "start": "node backend/server.js"
-```
+### Mode 1: Express + MongoDB Native Client + React 18 (Default - 95% of exams)
+- File: [`TEMPLATE_EXAM_STARTER/backend/server.js`](TEMPLATE_EXAM_STARTER/backend/server.js)
+- Run: `npm run template` (or `cd TEMPLATE_EXAM_STARTER && npm start`)
+- Best for: **Problem Statements 2, 3, 4** and **Questions Q1 - Q9**.
+- Dual-Mode: Automatically connects to `mongodb://127.0.0.1:27017`. If MongoDB is stopped, seamlessly switches to `backend/data_fallback.json` with zero errors!
+
+### Mode 2: Pure Core Node.js (`http`, `url`, `fs`, `path`) (Zero External Dependencies)
+- File: [`TEMPLATE_EXAM_STARTER/backend/server_core_node.js`](TEMPLATE_EXAM_STARTER/backend/server_core_node.js)
+- Run: `npm run template:core` (or `cd TEMPLATE_EXAM_STARTER && npm run start:core`)
+- Best for: **Problem Statement 1** or questions specifically stating *"Develop using Core Node.js using http, url, and fs modules without Express"*.
 
 ---
 
-## 🚀 1. The Universal Backend: `backend/server.js` (~80 Lines)
+# 📚 Detailed Solutions for Faculty Practice Problems
 
-Copy-paste this exact server code. Notice how simple and robust it is:
+---
+
+## 🌡️ Problem Statement 1: Regional Temperature Monitoring Dashboard (Core Node.js)
+
+### Requirements:
+- Use **Core Node.js** built-in modules: `http`, `url`, `fs`.
+- Manage historical and current temperature records collected from different regions.
+- Provide URL-based services consumed by React dashboard.
+- Read/write JSON-based climate data.
+
+### 1. How to Adapt the Template:
+Use [`TEMPLATE_EXAM_STARTER/backend/server_core_node.js`](TEMPLATE_EXAM_STARTER/backend/server_core_node.js):
 
 ```javascript
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const { MongoClient, ObjectId } = require('mongodb');
+// CHANGE ZONE 1:
+const PORT = 5000;
+const API_BASE = '/api/temperature';
 
-// ==========================================
-// 1. CONFIGURATION (CHANGE THESE 2 LINES!)
-// ==========================================
-const app = express();
-const PORT = process.env.PORT || 5000;          // Change to your question's port
-const DB_NAME = 'my_exam_db';                   // Change database name
-const COLLECTION_NAME = 'items';                // Change collection (e.g. 'books', 'patients')
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
-
-// ==========================================
-// 2. OFFLINE DATA STORE (NEVER CRASHES!)
-// ==========================================
-const DATA_FILE = path.join(__dirname, 'data_fallback.json');
+// CHANGE ZONE 2 (Initial Sample Climate Data):
 let memoryData = [
-  // CHANGE DUMMY RECORDS ACCORDING TO YOUR EXAM QUESTION:
-  { id: '1', title: 'Sample One', category: 'General', status: 'Active' },
-  { id: '2', title: 'Sample Two', category: 'Urgent', status: 'Pending' }
+  { id: '1', region: 'North', temperature: 42.5, humidity: 30, recordedAt: '2026-06-15 14:00', status: 'Active' },
+  { id: '2', region: 'South', temperature: 31.0, humidity: 75, recordedAt: '2026-06-15 14:00', status: 'Normal' },
+  { id: '3', region: 'West',  temperature: 46.2, humidity: 22, recordedAt: '2026-06-15 14:00', status: 'Warning' }
 ];
 
-function loadFallback() {
-  if (fs.existsSync(DATA_FILE)) {
-    try { memoryData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8')); } catch(e){}
+// CHANGE ZONE 3 (URL Query & Query Filter):
+// The template automatically parses URL with: const parsedUrl = url.parse(req.url, true);
+// Supports: GET /api/temperature?region=North
+```
+
+### 2. Run Command:
+```bash
+node TEMPLATE_EXAM_STARTER/backend/server_core_node.js
+```
+
+### 3. Test with cURL:
+```bash
+# Get all temperature records:
+curl http://localhost:5000/api/temperature
+
+# Filter by region URL query:
+curl "http://localhost:5000/api/temperature?region=North"
+
+# Add new climate record:
+curl -X POST http://localhost:5000/api/temperature \
+  -H "Content-Type: application/json" \
+  -d '{"region":"Central","temperature":38.4,"humidity":45,"status":"Active"}'
+```
+
+---
+
+## 🔥 Problem Statement 2: Heatwave Prediction & Severity Classification (Express REST + Validation)
+
+### Requirements:
+- RESTful backend using **Node.js and Express.js**.
+- Manage temperature observations and predicted heatwave severity.
+- REST APIs to Create, Retrieve, Update, and Delete regional climate records.
+- Validate incoming JSON data and return error/success status codes.
+- Test all routes using Postman.
+
+### 1. How to Adapt the Template:
+In [`TEMPLATE_EXAM_STARTER/backend/server.js`](TEMPLATE_EXAM_STARTER/backend/server.js):
+
+```javascript
+// CHANGE ZONE 1:
+const PORT = 5000;
+const DB_NAME = 'heatwave_db';
+const COLLECTION_NAME = 'climate_observations';
+const API_BASE = '/api/heatwave';
+
+// CHANGE ZONE 2:
+let memoryData = [
+  { id: '1', region: 'Vidarbha', temperature: 45.8, humidity: 24, severity: 'Extreme Heatwave', prediction: 'Alert Level Red' },
+  { id: '2', region: 'Marathwada', temperature: 41.2, humidity: 32, severity: 'Severe Heatwave', prediction: 'Alert Level Orange' },
+  { id: '3', region: 'Konkan', temperature: 34.0, humidity: 80, severity: 'Normal', prediction: 'No Heatwave' }
+];
+
+// CHANGE ZONE 3 (Validation & AI Severity Classification Rule):
+function validateAndEnrich(record) {
+  const temp = Number(record.temperature);
+  if (isNaN(temp) || temp < -20 || temp > 60) {
+    throw new Error('Temperature must be a valid number between -20°C and 60°C');
   }
-}
-function saveFallback() {
-  try { fs.writeFileSync(DATA_FILE, JSON.stringify(memoryData, null, 2)); } catch(e){}
-}
-
-// ==========================================
-// 3. MONGODB CLIENT (WITH AUTO OFFLINE MODE)
-// ==========================================
-let db = null;
-let isMongo = false;
-
-async function connectDB() {
-  loadFallback();
-  try {
-    const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 2000 });
-    await client.connect();
-    db = client.db(DB_NAME);
-    isMongo = true;
-    console.log(`[MongoDB] Connected to ${DB_NAME}`);
-    const count = await db.collection(COLLECTION_NAME).countDocuments();
-    if (count === 0 && memoryData.length > 0) {
-      await db.collection(COLLECTION_NAME).insertMany(memoryData.map(d => ({ ...d, _id: d.id })));
-    }
-  } catch (err) {
-    console.log('[MongoDB] Offline mode active. Using local JSON fallback.');
-    isMongo = false;
+  if (!record.region || record.region.trim() === '') {
+    throw new Error('Region name is required');
   }
+
+  // AI Heatwave Severity Rule
+  if (temp >= 45) {
+    record.severity = 'Extreme Heatwave';
+    record.prediction = 'Alert Level Red (Avoid outdoor activity)';
+  } else if (temp >= 40) {
+    record.severity = 'Severe Heatwave';
+    record.prediction = 'Alert Level Orange (High risk for elderly)';
+  } else if (temp >= 36) {
+    record.severity = 'Moderate Heatwave';
+    record.prediction = 'Alert Level Yellow (Stay hydrated)';
+  } else {
+    record.severity = 'Normal';
+    record.prediction = 'No Heatwave';
+  }
+
+  return { ...record, updatedAt: new Date().toISOString() };
 }
-
-const fmt = d => ({ ...d, id: String(d._id || d.id) });
-
-// ==========================================
-// 4. THE 4 UNIVERSAL CRUD ROUTES
-// ==========================================
-
-// GET ALL
-app.get('/api/items', async (req, res) => {
-  try {
-    if (isMongo && db) {
-      const list = await db.collection(COLLECTION_NAME).find().toArray();
-      return res.json(list.map(fmt));
-    }
-    res.json(memoryData);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// CREATE (POST)
-app.post('/api/items', async (req, res) => {
-  try {
-    const item = { ...req.body, createdAt: new Date().toISOString() };
-    if (isMongo && db) {
-      const result = await db.collection(COLLECTION_NAME).insertOne(item);
-      return res.status(201).json({ ...item, id: String(result.insertedId) });
-    }
-    item.id = 'id_' + Date.now();
-    memoryData.unshift(item);
-    saveFallback();
-    res.status(201).json(item);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// UPDATE (PUT)
-app.put('/api/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (isMongo && db) {
-      const filter = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { _id: id };
-      await db.collection(COLLECTION_NAME).updateOne(filter, { $set: req.body });
-      const updated = await db.collection(COLLECTION_NAME).findOne(filter);
-      return res.json(fmt(updated || { id, ...req.body }));
-    }
-    const idx = memoryData.findIndex(i => String(i.id) === String(id));
-    if (idx !== -1) { memoryData[idx] = { ...memoryData[idx], ...req.body }; saveFallback(); }
-    res.json(memoryData[idx] || { id, ...req.body });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// DELETE
-app.delete('/api/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (isMongo && db) {
-      const filter = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { _id: id };
-      await db.collection(COLLECTION_NAME).deleteOne(filter);
-      return res.json({ success: true, id });
-    }
-    memoryData = memoryData.filter(i => String(i.id) !== String(id));
-    saveFallback();
-    res.json({ success: true, id });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Fallback to React HTML
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-});
-
-app.listen(PORT, async () => {
-  console.log(`Server running at: http://localhost:${PORT}`);
-  await connectDB();
-});
 ```
 
----
-
-## 🌐 2. The Universal HTML: `frontend/index.html` (Always Identical!)
-
-You **never need to change anything** in this HTML file:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lab Exam Application</title>
-  <link rel="stylesheet" href="style.css">
-  
-  <!-- React 18 & Babel via CDN (Zero build setup!) -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel" src="app.jsx"></script>
-</body>
-</html>
-```
-
----
-
-## 🎨 3. The Universal Basic CSS: `frontend/style.css` (~70 Lines)
-
-Keep your CSS **very very basic** in lab exams so you can type it from memory in 2 minutes:
-
-```css
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; background: #f4f6f8; color: #333; padding: 20px; }
-.container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #ddd; }
-h1 { font-size: 24px; margin-bottom: 6px; }
-h2 { font-size: 18px; margin: 15px 0 10px; }
-p.subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
-
-.form-box { background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-.form-group { margin-bottom: 12px; }
-label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; }
-input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: #007bff; }
-
-.btn { padding: 8px 16px; font-size: 14px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; margin-right: 6px; }
-.btn:hover { background: #0056b3; }
-.btn-secondary { background: #6c757d; }
-.btn-danger { background: #dc3545; padding: 4px 8px; font-size: 12px; }
-.btn-warning { background: #ffc107; color: #212529; padding: 4px 8px; font-size: 12px; }
-
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-th { background: #f2f2f2; }
-tr:nth-child(even) { background: #fafafa; }
-.actions { display: flex; gap: 6px; }
-
-.badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-.badge-green { background: #d4edda; color: #155724; }
-.badge-yellow { background: #fff3cd; color: #856404; }
-.badge-red { background: #f8d7da; color: #721c24; }
-```
-
----
-
-## ⚛️ 4. The Universal React Frontend: `frontend/app.jsx`
-
-Here is the entire React code. Notice how straightforward it is:
-
-```jsx
-const { useState, useEffect } = React;
-const API_URL = '/api/items';
-
-function App() {
-  // 1. STATE (Adjust fields to match question)
-  const [items, setItems] = useState([]);
-  const [search, setSearch] = useState('');
-  const initialForm = { title: '', category: 'General', status: 'Active' };
-  const [form, setForm] = useState(initialForm);
-  const [editingId, setEditingId] = useState(null);
-
-  // 2. FETCH DATA
-  const loadData = async () => {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    setItems(data);
-  };
-  useEffect(() => { loadData(); }, []);
-
-  // 3. SUBMIT (POST / PUT)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const method = editingId ? 'PUT' : 'POST';
-    const url = editingId ? `${API_URL}/${editingId}` : API_URL;
-
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-
-    setForm(initialForm);
-    setEditingId(null);
-    loadData();
-  };
-
-  // 4. DELETE
-  const handleDelete = async (id) => {
-    if (confirm('Delete this record?')) {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      loadData();
-    }
-  };
-
-  // 5. EDIT
-  const handleEdit = (item) => {
-    setEditingId(item.id);
-    setForm(item);
-  };
-
-  // 6. FILTERING
-  const filtered = items.filter(i => 
-    (i.title || '').toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="container">
-      <h1>Dashboard (Total: {items.length})</h1>
-
-      {/* INPUT FORM */}
-      <form onSubmit={handleSubmit} className="card">
-        <h3>{editingId ? 'Edit Record' : 'Add Record'}</h3>
-        <input 
-          placeholder="Title" 
-          value={form.title || ''} 
-          onChange={e => setForm({ ...form, title: e.target.value })} 
-          required 
-        />
-        <input 
-          placeholder="Category" 
-          value={form.category || ''} 
-          onChange={e => setForm({ ...form, category: e.target.value })} 
-        />
-        <button type="submit">{editingId ? 'Update' : 'Add'}</button>
-        {editingId && <button onClick={() => { setEditingId(null); setForm(initialForm); }}>Cancel</button>}
-      </form>
-
-      {/* SEARCH BAR */}
-      <input 
-        placeholder="🔍 Search..." 
-        value={search} 
-        onChange={e => setSearch(e.target.value)} 
-        style={{ margin: '1rem 0', width: '100%' }}
-      />
-
-      {/* DATA TABLE */}
-      <table className="card" width="100%">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(i => (
-            <tr key={i.id}>
-              <td>{i.title}</td>
-              <td>{i.category}</td>
-              <td>{i.status}</td>
-              <td>
-                <button onClick={() => handleEdit(i)}>Edit</button>
-                <button onClick={() => handleDelete(i.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-```
-
----
-
-## 🎯 How to Solve Questions Q1 - Q9 Using This Template
-
-Here is the exact cheatsheet showing what to change for each question:
-
-| Question | Entity | Port | Fields to Put in `server.js` and `app.jsx` | Special Feature to Mention |
-|---|---|---|---|---|
-| **Q1: Book Store** | `books` | `5001` | `title`, `author`, `price`, `category`, `stock` | Cart array in state: `[cart, setCart]` |
-| **Q2: Doctor Appt** | `appointments` | `5002` | `patientName`, `doctorName`, `date`, `time`, `status` | Status dropdown (Booked, Cancelled) |
-| **Q3: Expense Tracker** | `expenses` | `5003` | `title`, `amount`, `category`, `date` | Total amount: `items.reduce((s,i) => s + Number(i.amount), 0)` |
-| **Q4: Daily Task Mgr** | `tasks` | `5004` | `title`, `priority` (High/Med/Low), `status`, `dueDate` | Status toggle: `PUT /api/tasks/:id` with toggled status |
-| **Q5: Discussion Forum** | `posts` | `5005` | `title`, `content`, `author`, `upvotes` | Upvote button: `PUT` with `upvotes: i.upvotes + 1` |
-| **Q6: Teacher Gradebook** | `students` | `5006` | `name`, `roll`, `marks1`, `marks2`, `marks3` | Calculate avg: `((m1+m2+m3)/3)` and letter grade |
-| **Q7: Product/User Mgmt** | `products` | `5007` | `name`, `price`, `stock`, `category` | Regex validation: `emailRegex = /^\S+@\S+\.\S+$/` |
-| **Q8: Team Directory** | `members` | `5008` | `name`, `role`, `department`, `email`, `bio` | Pass props to subcomponent: `<TeamCard member={m} />` |
-| **Q9: Patient Mgmt** | `patients` | `5009` | `name`, `age`, `gender`, `medicalCondition`, `status` | Filter by status (Admitted, Discharged) |
-
----
-
-## 🛡️ Why This Architecture Guarantees Full Marks in Exams
-
-1. **Zero Database Crashes**: In 50% of university labs, MongoDB is not running or has port conflicts. With the automatic JSON fallback, your application **runs 100% smoothly** regardless!
-2. **Zero Build Failures**: Traditional React apps (`create-react-app`, Vite) require `npm run build` or dev servers that often fail on slow lab computers with missing global packages. With Babel Standalone CDN, **any browser runs your JSX instantly**!
-3. **Clean Code Separation**: Examiners love seeing `backend/server.js` and `frontend/app.jsx` cleanly organized in separate folders.
-4. **Universal 1-Command Execution**:
-   ```bash
-   cd Question_Folder
-   npm start
+### 2. Postman Verification Test Suite:
+1. **GET `/api/heatwave`** -> Returns status `200 OK` with JSON array of observations.
+2. **POST `/api/heatwave`** with Body:
+   ```json
+   {
+     "region": "Rajasthan Desert",
+     "temperature": 47.5,
+     "humidity": 18
+   }
    ```
-   Express automatically serves both your REST API and your React frontend on the same port!
+   -> Returns status `201 Created` with automatically classified severity: `"Extreme Heatwave"`.
+3. **POST `/api/heatwave` (Invalid Validation Test)** with Body:
+   ```json
+   {
+     "region": "",
+     "temperature": 150
+   }
+   ```
+   -> Returns status `400 Bad Request` with error message.
+4. **PUT `/api/heatwave/:id`** -> Returns status `200 OK` with updated record.
+5. **DELETE `/api/heatwave/:id`** -> Returns status `200 OK` `{ "success": true, "id": "..." }`.
+
+---
+
+## 🌾 Problem Statement 3 & 4: Integrated Smart Sugarcane Irrigation System (MongoDB + Express + React)
+
+### Requirements:
+- Backend: Node.js, Express.js, MongoDB database.
+- Maintain **Farmer**, **Plot**, **Soil Moisture**, **Crop Stage**, **Weather**, and **Irrigation** records.
+- Provide RESTful APIs for CRUD and plot-specific information retrieval for AI decision support.
+- Frontend: Responsive **ReactJS dashboard** displaying plots, soil moisture, weather, and AI recommendations.
+
+### 1. Backend (`TEMPLATE_EXAM_STARTER/backend/server.js`):
+```javascript
+// CHANGE ZONE 1:
+const PORT = 5000;
+const DB_NAME = 'sugarcane_irrigation_db';
+const COLLECTION_NAME = 'plots';
+const API_BASE = '/api/plots';
+
+// CHANGE ZONE 2:
+let memoryData = [
+  {
+    id: '1',
+    plotNumber: 'Plot #101',
+    farmerName: 'Ramesh Patil',
+    cropStage: 'Tillering',
+    soilMoisture: 28,
+    weather: 'Sunny (38°C)',
+    recommendation: 'Urgent: Irrigate 120 mins immediately'
+  },
+  {
+    id: '2',
+    plotNumber: 'Plot #102',
+    farmerName: 'Suresh More',
+    cropStage: 'Grand Growth',
+    soilMoisture: 58,
+    weather: 'Cloudy (30°C)',
+    recommendation: 'Moisture Adequate: No irrigation required today'
+  },
+  {
+    id: '3',
+    plotNumber: 'Plot #103',
+    farmerName: 'Anita Deshmukh',
+    cropStage: 'Germination',
+    soilMoisture: 42,
+    weather: 'Hot & Dry (36°C)',
+    recommendation: 'Moderate: Schedule 45 min drip irrigation'
+  }
+];
+
+// CHANGE ZONE 3 (AI Decision Support Logic):
+function validateAndEnrich(record) {
+  const moisture = Number(record.soilMoisture || 0);
+
+  // AI Irrigation Recommendation Algorithm:
+  if (moisture < 30) {
+    record.recommendation = '⚠️ CRITICAL: Soil moisture low (<30%). Irrigate 120 mins immediately!';
+    record.status = 'Urgent';
+  } else if (moisture < 50) {
+    record.recommendation = '💧 SCHEDULED: Soil moisture moderate (30-50%). Apply 45 mins drip irrigation.';
+    record.status = 'Pending';
+  } else {
+    record.recommendation = '✅ OPTIMAL: Moisture adequate (>50%). Zero irrigation required.';
+    record.status = 'Completed';
+  }
+
+  return { ...record, updatedAt: new Date().toISOString() };
+}
+```
+
+### 2. Frontend (`TEMPLATE_EXAM_STARTER/frontend/src/App.jsx`):
+```jsx
+// CHANGE ZONE 1:
+const PAGE_TITLE = '🌾 Smart Sugarcane Irrigation Decision Dashboard';
+const API_URL = '/api/plots';
+const INITIAL_FORM = {
+  plotNumber: '',
+  farmerName: '',
+  cropStage: 'Tillering',
+  soilMoisture: 40,
+  weather: 'Sunny (35°C)'
+};
+
+// CHANGE ZONE 3 (Form Inputs):
+<div className="form-row">
+  <div className="form-group flex-1">
+    <label>Plot Identifier *</label>
+    <input
+      type="text"
+      placeholder="e.g. Plot #104"
+      value={form.plotNumber || ''}
+      onChange={e => setForm({ ...form, plotNumber: e.target.value })}
+      required
+    />
+  </div>
+  <div className="form-group flex-1">
+    <label>Farmer Name *</label>
+    <input
+      type="text"
+      placeholder="e.g. Ganesh Shinde"
+      value={form.farmerName || ''}
+      onChange={e => setForm({ ...form, farmerName: e.target.value })}
+      required
+    />
+  </div>
+  <div className="form-group flex-1">
+    <label>Soil Moisture (%) *</label>
+    <input
+      type="number"
+      min="0"
+      max="100"
+      value={form.soilMoisture || ''}
+      onChange={e => setForm({ ...form, soilMoisture: Number(e.target.value) })}
+      required
+    />
+  </div>
+  <div className="form-group flex-1">
+    <label>Crop Stage</label>
+    <select
+      value={form.cropStage || 'Tillering'}
+      onChange={e => setForm({ ...form, cropStage: e.target.value })}
+    >
+      <option value="Germination">Germination</option>
+      <option value="Tillering">Tillering</option>
+      <option value="Grand Growth">Grand Growth</option>
+      <option value="Maturity">Maturity</option>
+    </select>
+  </div>
+</div>
+
+// CHANGE ZONE 4 (Table Columns):
+<thead>
+  <tr>
+    <th>Plot</th>
+    <th>Farmer</th>
+    <th>Crop Stage</th>
+    <th>Soil Moisture</th>
+    <th>AI Recommendation</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  {filteredItems.map(item => (
+    <tr key={item.id}>
+      <td><strong>{item.plotNumber}</strong></td>
+      <td>{item.farmerName}</td>
+      <td>{item.cropStage}</td>
+      <td>
+        <span className={`badge ${item.soilMoisture < 30 ? 'badge-red' : item.soilMoisture < 50 ? 'badge-yellow' : 'badge-green'}`}>
+          {item.soilMoisture}%
+        </span>
+      </td>
+      <td>{item.recommendation}</td>
+      <td className="actions">
+        <button className="btn btn-warning btn-small" onClick={() => handleEdit(item)}>Edit</button>
+        <button className="btn btn-danger btn-small" onClick={() => handleDelete(item.id)}>Delete</button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+```
+
+---
+
+## 📋 Master Cheatsheet for Questions Q1 through Q9
+
+Located in [`already_set_questions/`](already_set_questions/):
+
+| Question | Entity & Port | Database | Model Fields to Change | Special Feature / Viva Hook |
+|---|---|---|---|---|
+| **Q1: Book Store** | `books` (`5001`) | `book_ecommerce` | `title`, `author`, `price`, `category`, `stock` | Cart array state `[cart, setCart]`, React Router v6 |
+| **Q2: Doctor Appt** | `appointments` (`5002`) | `doctor_appointments` | `patientName`, `doctorName`, `date`, `time`, `status` | Doctor schedule filters, Status toggles |
+| **Q3: Expense Tracker** | `expenses` (`5003`) | `expense_tracker` | `title`, `amount`, `category`, `date` | Category budget breakdown progress bars |
+| **Q4: Daily Task Mgr** | `tasks` (`5004`) | `task_manager` | `title`, `priority` (High/Med/Low), `dueDate`, `status` | Status toggle checkbox with `PUT` endpoint |
+| **Q5: Discussion Forum** | `posts` (`5005`) | `discussion_forum` | `title`, `content`, `author`, `upvotes` | Upvote button sending `upvotes: item.upvotes + 1` |
+| **Q6: Teacher Gradebook** | `students` (`5006`) | `gradebook_db` | `name`, `roll`, `marks1`, `marks2`, `marks3` | Auto-calculates Average mark and Letter Grade |
+| **Q7: Product & User Mgmt**| `products` (`5007`) | `product_user_db` | `name`, `price`, `stock`, `email`, `phone` | Strict Regex validation (`/^\S+@\S+\.\S+$/`) |
+| **Q8: Team Directory** | `members` (`5008`) | `team_directory_db` | `name`, `role`, `department`, `email`, `bio` | Reusable props passing (`<Navbar />`, `<TeamCard />`) |
+| **Q9: Patient Records** | `patients` (`5009`) | `patient_management_db` | `name`, `age`, `disease`, `room`, `status` | Hospital admission filtering (Admitted / Discharged) |
+
+---
+
+## 🛡️ Top 5 Exam Viva Questions & Model Answers
+
+### Q1: Why do you use `MongoClient` directly instead of Mongoose?
+**Answer:** The official university syllabus and exam rubrics evaluate the official native MongoDB driver (`mongodb` npm package). `MongoClient` directly interacts with the database via connection pooling, requires zero schema lock-in, and starts up with zero overhead.
+
+### Q2: What happens if MongoDB is not running on the examiner's PC?
+**Answer:** Our universal architecture includes an automatic fail-safe. If the MongoDB service is stopped or port 27017 is blocked, the server catches the error, activates local JSON file persistence (`data_fallback.json`), and continues serving full CRUD requests with zero downtime or crash.
+
+### Q3: What is the difference between Core Node.js and Express.js?
+**Answer:** Core Node.js uses native modules (`http`, `url`, `fs`) where request routing, URL parsing, and streaming request body parsing must be handled manually. Express.js is a minimal, flexible web framework built on top of Core Node.js that provides high-level routing, built-in body parsing middleware (`express.json()`), and cleaner syntax.
+
+### Q4: How does React communicate with the Express backend?
+**Answer:** Through the browser's native `fetch` API using standard HTTP verbs:
+- `fetch('/api/items', { method: 'GET' })` to read.
+- `fetch('/api/items', { method: 'POST', body: JSON.stringify(data) })` to create.
+- `fetch('/api/items/:id', { method: 'PUT', body: JSON.stringify(data) })` to update.
+- `fetch('/api/items/:id', { method: 'DELETE' })` to delete.
+
+### Q5: How do you serve the React app and Express API from the same port?
+**Answer:** Express statically hosts the production build of React via `app.use(express.static(path.join(__dirname, '../frontend/dist')))`, with a catch-all route `app.get('*', ...)` serving `index.html`. This avoids CORS issues and allows running the entire application on a single port (e.g., `5000`).

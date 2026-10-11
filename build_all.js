@@ -3,15 +3,15 @@ const path = require('path');
 
 const folders = [
   'TEMPLATE_EXAM_STARTER',
-  'Q1_Book_Ecommerce_Roll_24-30',
-  'Q2_Doctor_Appointment_Roll_31-38',
-  'Q3_Expense_Tracker_Roll_39-45',
-  'Q4_Daily_Task_Manager_Roll_46-51_70',
-  'Q5_Discussion_Forum_Roll_52-59',
-  'Q6_Teacher_Student_Dashboard_Roll_61-67',
-  'Q7_Product_User_Management',
-  'Q8_Team_Member_Directory',
-  'Q9_Patient_Management'
+  'already_set_questions/Q1_Book_Ecommerce_Roll_24-30',
+  'already_set_questions/Q2_Doctor_Appointment_Roll_31-38',
+  'already_set_questions/Q3_Expense_Tracker_Roll_39-45',
+  'already_set_questions/Q4_Daily_Task_Manager_Roll_46-51_70',
+  'already_set_questions/Q5_Discussion_Forum_Roll_52-59',
+  'already_set_questions/Q6_Teacher_Student_Dashboard_Roll_61-67',
+  'already_set_questions/Q7_Product_User_Management',
+  'already_set_questions/Q8_Team_Member_Directory',
+  'already_set_questions/Q9_Patient_Management'
 ];
 
 console.log('Building production Vite bundles for all 10 frontend projects...\n');

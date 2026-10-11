@@ -19,63 +19,63 @@ const SUITES = [
   },
   {
     name: 'Q1: Book E-Commerce',
-    folder: 'Q1_Book_Ecommerce_Roll_24-30',
+    folder: 'already_set_questions/Q1_Book_Ecommerce_Roll_24-30',
     port: 5001,
     apiEndpoint: '/api/books',
     topic: 'Rolls 24-30: React Router, Cart & Inventory'
   },
   {
     name: 'Q2: Doctor Appointments',
-    folder: 'Q2_Doctor_Appointment_Roll_31-38',
+    folder: 'already_set_questions/Q2_Doctor_Appointment_Roll_31-38',
     port: 5002,
     apiEndpoint: '/api/doctors',
     topic: 'Rolls 31-38: Booking & Rescheduling'
   },
   {
     name: 'Q3: Expense Tracker',
-    folder: 'Q3_Expense_Tracker_Roll_39-45',
+    folder: 'already_set_questions/Q3_Expense_Tracker_Roll_39-45',
     port: 5003,
     apiEndpoint: '/api/expenses',
     topic: 'Rolls 39-45: Categories & Progress Bars'
   },
   {
     name: 'Q4: Daily Task Manager',
-    folder: 'Q4_Daily_Task_Manager_Roll_46-51_70',
+    folder: 'already_set_questions/Q4_Daily_Task_Manager_Roll_46-51_70',
     port: 5004,
     apiEndpoint: '/api/tasks',
     topic: 'Rolls 46-51, 70: Task CRUD & Status Toggles'
   },
   {
     name: 'Q5: Discussion Forum',
-    folder: 'Q5_Discussion_Forum_Roll_52-59',
+    folder: 'already_set_questions/Q5_Discussion_Forum_Roll_52-59',
     port: 5005,
     apiEndpoint: '/api/posts',
     topic: 'Rolls 52-59: Context API & Upvoting'
   },
   {
     name: 'Q6: Student Gradebook',
-    folder: 'Q6_Teacher_Student_Dashboard_Roll_61-67',
+    folder: 'already_set_questions/Q6_Teacher_Student_Dashboard_Roll_61-67',
     port: 5006,
     apiEndpoint: '/api/students',
     topic: 'Rolls 61-67: Grades, Stats & Report Cards'
   },
   {
     name: 'Q7: Product & User Management',
-    folder: 'Q7_Product_User_Management',
+    folder: 'already_set_questions/Q7_Product_User_Management',
     port: 5007,
     apiEndpoint: '/api/products',
     topic: 'Dual CRUD with Regex Validations'
   },
   {
     name: 'Q8: Team Member Directory',
-    folder: 'Q8_Team_Member_Directory',
+    folder: 'already_set_questions/Q8_Team_Member_Directory',
     port: 5008,
     apiEndpoint: '/api/members',
     topic: 'Reusable React Components & Props'
   },
   {
     name: 'Q9: Patient Management',
-    folder: 'Q9_Patient_Management',
+    folder: 'already_set_questions/Q9_Patient_Management',
     port: 5009,
     apiEndpoint: '/api/patients',
     topic: 'Health Record CRUD & Admissions'

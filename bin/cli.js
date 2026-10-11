@@ -13,15 +13,15 @@ if (target === 'all') {
   const children = [];
   const entries = [
     { name: 'Universal Starter', port: 5000, folder: 'TEMPLATE_EXAM_STARTER' },
-    { name: 'Q1: Book E-Commerce', port: 5001, folder: 'Q1_Book_Ecommerce_Roll_24-30' },
-    { name: 'Q2: Doctor Appointments', port: 5002, folder: 'Q2_Doctor_Appointment_Roll_31-38' },
-    { name: 'Q3: Expense Tracker', port: 5003, folder: 'Q3_Expense_Tracker_Roll_39-45' },
-    { name: 'Q4: Daily Task Manager', port: 5004, folder: 'Q4_Daily_Task_Manager_Roll_46-51_70' },
-    { name: 'Q5: Discussion Forum', port: 5005, folder: 'Q5_Discussion_Forum_Roll_52-59' },
-    { name: 'Q6: Student Gradebook', port: 5006, folder: 'Q6_Teacher_Student_Dashboard_Roll_61-67' },
-    { name: 'Q7: Product & User Mgmt', port: 5007, folder: 'Q7_Product_User_Management' },
-    { name: 'Q8: Team Directory', port: 5008, folder: 'Q8_Team_Member_Directory' },
-    { name: 'Q9: Patient Management', port: 5009, folder: 'Q9_Patient_Management' }
+    { name: 'Q1: Book E-Commerce', port: 5001, folder: 'already_set_questions/Q1_Book_Ecommerce_Roll_24-30' },
+    { name: 'Q2: Doctor Appointments', port: 5002, folder: 'already_set_questions/Q2_Doctor_Appointment_Roll_31-38' },
+    { name: 'Q3: Expense Tracker', port: 5003, folder: 'already_set_questions/Q3_Expense_Tracker_Roll_39-45' },
+    { name: 'Q4: Daily Task Manager', port: 5004, folder: 'already_set_questions/Q4_Daily_Task_Manager_Roll_46-51_70' },
+    { name: 'Q5: Discussion Forum', port: 5005, folder: 'already_set_questions/Q5_Discussion_Forum_Roll_52-59' },
+    { name: 'Q6: Student Gradebook', port: 5006, folder: 'already_set_questions/Q6_Teacher_Student_Dashboard_Roll_61-67' },
+    { name: 'Q7: Product & User Mgmt', port: 5007, folder: 'already_set_questions/Q7_Product_User_Management' },
+    { name: 'Q8: Team Directory', port: 5008, folder: 'already_set_questions/Q8_Team_Member_Directory' },
+    { name: 'Q9: Patient Management', port: 5009, folder: 'already_set_questions/Q9_Patient_Management' }
   ];
 
   entries.forEach(e => {
@@ -43,15 +43,15 @@ if (target === 'all') {
 
 const MAP = {
   template: { folder: 'TEMPLATE_EXAM_STARTER', port: 5000, name: 'Universal Starter Template' },
-  q1: { folder: 'Q1_Book_Ecommerce_Roll_24-30', port: 5001, name: 'Q1: Book E-Commerce' },
-  q2: { folder: 'Q2_Doctor_Appointment_Roll_31-38', port: 5002, name: 'Q2: Doctor Appointments' },
-  q3: { folder: 'Q3_Expense_Tracker_Roll_39-45', port: 5003, name: 'Q3: Expense Tracker' },
-  q4: { folder: 'Q4_Daily_Task_Manager_Roll_46-51_70', port: 5004, name: 'Q4: Daily Task Manager' },
-  q5: { folder: 'Q5_Discussion_Forum_Roll_52-59', port: 5005, name: 'Q5: Discussion Forum' },
-  q6: { folder: 'Q6_Teacher_Student_Dashboard_Roll_61-67', port: 5006, name: 'Q6: Student Gradebook' },
-  q7: { folder: 'Q7_Product_User_Management', port: 5007, name: 'Q7: Product & User Management' },
-  q8: { folder: 'Q8_Team_Member_Directory', port: 5008, name: 'Q8: Team Member Directory' },
-  q9: { folder: 'Q9_Patient_Management', port: 5009, name: 'Q9: Patient Management' },
+  q1: { folder: 'already_set_questions/Q1_Book_Ecommerce_Roll_24-30', port: 5001, name: 'Q1: Book E-Commerce' },
+  q2: { folder: 'already_set_questions/Q2_Doctor_Appointment_Roll_31-38', port: 5002, name: 'Q2: Doctor Appointments' },
+  q3: { folder: 'already_set_questions/Q3_Expense_Tracker_Roll_39-45', port: 5003, name: 'Q3: Expense Tracker' },
+  q4: { folder: 'already_set_questions/Q4_Daily_Task_Manager_Roll_46-51_70', port: 5004, name: 'Q4: Daily Task Manager' },
+  q5: { folder: 'already_set_questions/Q5_Discussion_Forum_Roll_52-59', port: 5005, name: 'Q5: Discussion Forum' },
+  q6: { folder: 'already_set_questions/Q6_Teacher_Student_Dashboard_Roll_61-67', port: 5006, name: 'Q6: Student Gradebook' },
+  q7: { folder: 'already_set_questions/Q7_Product_User_Management', port: 5007, name: 'Q7: Product & User Management' },
+  q8: { folder: 'already_set_questions/Q8_Team_Member_Directory', port: 5008, name: 'Q8: Team Member Directory' },
+  q9: { folder: 'already_set_questions/Q9_Patient_Management', port: 5009, name: 'Q9: Patient Management' },
   verify: { file: 'verify_all.js', name: 'Verify All Suites' }
 };
 
