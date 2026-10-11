@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * 🎓 CORE NODE.JS EXAM SERVER (Zero Express, Zero npm packages!)
+ * CORE NODE.JS EXAM SERVER (Zero Express, Zero npm packages)
  * ==============================================================================
  * For questions specifically stating:
  * "Develop using Core Node.js using http, url, and fs modules without Express"
@@ -58,19 +58,21 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       const records = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
-      const newRec = { ...JSON.parse(body), id: Date.now().toString() };
-      records.push(newRec);
+      const newRecord = { id: String(Date.now()), ...JSON.parse(body) };
+      records.push(newRecord);
       fs.writeFileSync(DATA_FILE, JSON.stringify(records, null, 2));
       res.writeHead(201, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(newRec));
+      res.end(JSON.stringify(newRecord));
     });
     return;
   }
 
-  // 404 Fallback
-  res.writeHead(404);
-  res.end('Not Found');
+  // Default Fallback
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Endpoint Not Found' }));
 });
 
-// Step 4: Start Server
-server.listen(PORT, () => console.log(`Core Node server running on http://localhost:${PORT}`));
+// Step 4: Start server
+server.listen(PORT, () => {
+  console.log(`[CORE NODE] Running at http://localhost:${PORT}`);
+});

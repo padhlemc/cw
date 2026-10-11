@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * 🎓 THE UNIVERSAL EXAM SERVER (Express + Native MongoDB MongoClient)
+ * UNIVERSAL EXAM SERVER (Express + Native MongoDB MongoClient)
  * ==============================================================================
  * Examiner Marking Points:
  * 1. Express setup & middleware: cors, express.json
@@ -44,7 +44,7 @@ const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTim
 client.connect()
   .then(async () => {
     db = client.db(DB_NAME);
-    console.log(`✅ [MongoDB] Connected: Database "${DB_NAME}" -> Collection "${COLLECTION}"`);
+    console.log(`[MongoDB] Connected: Database "${DB_NAME}" -> Collection "${COLLECTION}"`);
 
     // Auto-seed sample items if collection is empty
     const count = await db.collection(COLLECTION).countDocuments();
@@ -54,10 +54,10 @@ client.connect()
         { title: 'Sample Item Beta', category: 'Urgent', status: 'Pending' },
         { title: 'Sample Item Gamma', category: 'General', status: 'Completed' }
       ]);
-      console.log('🌱 [MongoDB] Seeded initial sample items.');
+      console.log('[MongoDB] Seeded initial sample items.');
     }
   })
-  .catch(() => console.log('⚠️ [MongoDB] Offline! Seamless in-memory fallback active.'));
+  .catch(() => console.log('[MongoDB] Offline! Seamless in-memory fallback active.'));
 
 // Helper: Match both native ObjectId and custom string IDs
 function buildFilter(id) {
@@ -68,7 +68,7 @@ function buildFilter(id) {
 }
 
 // ==============================================================================
-// 🔌 THE 4 CORE REST API ENDPOINTS
+// THE 4 CORE REST API ENDPOINTS
 // ==============================================================================
 
 // ROUTE 1: GET ALL ITEMS -> db.collection.find().toArray()
@@ -102,7 +102,7 @@ app.post('/api/items', async (req, res) => {
       memoryItems.push(item);
     }
 
-    console.log(`➕ [POST] Created item: "${item.title}" (_id: ${item._id})`);
+    console.log(`[POST] Created item: "${item.title}" (_id: ${item._id})`);
     res.status(201).json(item);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -118,7 +118,7 @@ app.put('/api/items/:id', async (req, res) => {
     } else {
       memoryItems = memoryItems.map(item => String(item._id) === String(id) ? { ...item, ...req.body } : item);
     }
-    console.log(`✏️ [PUT] Updated item ID: ${id}`);
+    console.log(`[PUT] Updated item ID: ${id}`);
     res.json({ message: 'Updated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -131,7 +131,7 @@ app.delete('/api/items/:id', async (req, res) => {
     const { id } = req.params;
     if (db) {
       const result = await db.collection(COLLECTION).deleteOne(buildFilter(id));
-      console.log(`🗑️ [DELETE] Deleted ID: ${id} (Deleted count: ${result.deletedCount})`);
+      console.log(`[DELETE] Deleted ID: ${id} (Deleted count: ${result.deletedCount})`);
     } else {
       memoryItems = memoryItems.filter(item => String(item._id) !== String(id));
     }
@@ -150,5 +150,5 @@ app.get('*', (req, res) => {
 
 // 6. START SERVER
 app.listen(PORT, () => {
-  console.log(`🚀 Universal Exam Starter running at: http://localhost:${PORT}`);
+  console.log(`[SERVER] Universal Exam Starter running at: http://localhost:${PORT}`);
 });

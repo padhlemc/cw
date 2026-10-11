@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * 🎓 THE UNIVERSAL EXAM REACT DASHBOARD (Lean, Aesthetic, 4 Change Zones)
+ * THE UNIVERSAL EXAM REACT DASHBOARD (Lean, Aesthetic, 4 Change Zones)
  * ==============================================================================
  * Examiner Marking Points:
  * 1. useState: items list, form fields, search filter
@@ -74,7 +74,7 @@ export default function App() {
           <h1 className="title">Exam Starter Dashboard</h1>
           <p style={{ fontSize: '13px', color: '#64748b' }}>Universal Full-Stack CRUD (MongoDB + Express + React)</p>
         </div>
-        <span className="db-pill">🟢 MongoDB Connected</span>
+        <span className="db-pill">MongoDB Connected</span>
       </div>
 
       {/* --- CHANGE ZONE 3: FORM INPUTS --- */}
@@ -105,7 +105,7 @@ export default function App() {
           <option value="Completed">Completed</option>
         </select>
         <button type="submit" className="btn-primary">
-          + Add
+          Add Item
         </button>
       </form>
 
@@ -113,7 +113,7 @@ export default function App() {
       <input
         type="text"
         className="search-input"
-        placeholder="🔍 Search items by title..."
+        placeholder="Search items by title..."
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
