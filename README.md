@@ -6,8 +6,9 @@ Production-grade, fully working solutions for all **9 Internal Assessment (IA-2)
 
 ## 🌟 The Universal Exam Template (Learn 1 Template, Solve Any Question!)
 
-Before checking individual questions, read [**UNIVERSAL_EXAM_TEMPLATE.md**](UNIVERSAL_EXAM_TEMPLATE.md) and inspect [**TEMPLATE_EXAM_STARTER/**](TEMPLATE_EXAM_STARTER):
-- **Core Insight**: Every lab exam question is 95% identical (Express REST API + React 18 Vite + MongoDB Native Driver).
+Before checking individual questions, check the guides and inspect [**TEMPLATE_EXAM_STARTER/**](TEMPLATE_EXAM_STARTER):
+- 🎬 [**EXAM_STUDY_AND_VIDEO_GUIDE.md**](EXAM_STUDY_AND_VIDEO_GUIDE.md): The **90-minute video roadmap** + mental model for when and how to change the code.
+- 🎓 [**UNIVERSAL_EXAM_TEMPLATE.md**](UNIVERSAL_EXAM_TEMPLATE.md): Master cheatsheet covering the 4 problem statements + questions Q1-Q9.
 - **The "Change Only 4 Things" Rule**: You only change: (1) Port & Collection Name, (2) Schema fields, (3) Form Inputs, and (4) Table Display columns!
 - **Zero Lab Crashes**: Built-in automatic fallback to local JSON storage if MongoDB is not running on the college computer.
 - **Vite React Architecture (No Babel)**: Pure React 18 + Vite with ES modules, zero Babel CDN runtime lag, pre-built production bundles, and offline resilience!
