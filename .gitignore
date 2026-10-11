@@ -48,6 +48,7 @@ mongod.lock
 # Compressed archives & packages
 *.tgz
 *.zip
+test_degit*
 *.tar
 *.tar.gz
 *.7z
