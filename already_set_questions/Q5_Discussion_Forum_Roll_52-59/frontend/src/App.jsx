@@ -1,57 +1,110 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import './style.css';
 
-// 1. React Context for Global State
-const ForumContext = createContext();
-
-function PostForm() {
-  const { addPost } = useContext(ForumContext);
-  const [form, setForm] = useState({ title: '', author: '', content: '' });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    addPost(form);
-    setForm({ title: '', author: '', content: '' });
-  };
+function PostsListView({ posts, onUpvote, onDelete }) {
+  const navigate = useNavigate();
 
   return (
-    <form onSubmit={handleSubmit} style={{ background: '#f8fafc', padding: 15, borderRadius: 6, border: '1px solid #e2e8f0', marginBottom: 20 }}>
-      <h3>Create New Post</h3>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-        <input placeholder="Post Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required style={{ flex: 2, padding: 8 }} />
-        <input placeholder="Your Name" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} required style={{ flex: 1, padding: 8 }} />
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3>Discussion Threads ({posts.length})</h3>
+        <button onClick={() => navigate('/add')} className="btn btn-primary">
+          Start New Thread
+        </button>
       </div>
-      <textarea placeholder="Write post content..." value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} required rows={3} style={{ width: '100%', boxSizing: 'border-box', padding: 8, marginBottom: 10 }} />
-      <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-        Publish Post
-      </button>
-    </form>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th>TITLE</th><th>AUTHOR</th><th>CATEGORY</th><th>UPVOTES</th><th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {posts.map(p => (
+            <tr key={p._id}>
+              <td><strong>{p.title}</strong></td>
+              <td>{p.author}</td>
+              <td>{p.category}</td>
+              <td>{p.upvotes || 0}</td>
+              <td>
+                <button onClick={() => onUpvote(p._id)} className="btn btn-secondary btn-sm">
+                  +1 Upvote
+                </button>
+                <button onClick={() => onDelete(p._id)} className="btn btn-danger btn-sm">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {posts.length === 0 && (
+            <tr><td colSpan="5" style={{ textAlign: 'center', padding: 20 }}>No discussions yet.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function PostList() {
-  const { posts, upvotePost, deletePost } = useContext(ForumContext);
+function AddPostView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ title: '', author: '', category: 'Tech', content: '' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(form);
+    navigate('/');
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <h3>Community Discussions ({posts.length})</h3>
-      {posts.map(p => (
-        <div key={p._id} style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: 14, background: '#fff' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <h4 style={{ margin: 0, color: '#1e293b' }}>{p.title}</h4>
-            <span style={{ fontSize: 13, color: '#64748b' }}>By <strong>{p.author}</strong></span>
-          </div>
-          <p style={{ margin: '0 0 12px', color: '#334155', fontSize: 14 }}>{p.content}</p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => upvotePost(p._id)} style={{ padding: '4px 10px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: 4, cursor: 'pointer' }}>
-              👍 Upvote ({p.upvotes || 0})
-            </button>
-            <button onClick={() => deletePost(p._id)} style={{ padding: '4px 10px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-              🗑 Delete
-            </button>
-          </div>
+    <div className="card">
+      <h2>Start New Discussion Thread</h2>
+      <form onSubmit={handleSubmit} className="form">
+        <div className="form-group">
+          <label>Thread Title:</label>
+          <input
+            required
+            placeholder="e.g. How does MongoDB connection work?"
+            value={form.title}
+            onChange={e => setForm({ ...form, title: e.target.value })}
+          />
         </div>
-      ))}
-      {posts.length === 0 && <p>No discussions yet. Be the first to start one!</p>}
+
+        <div className="form-group">
+          <label>Your Name / Author:</label>
+          <input
+            required
+            placeholder="Enter author name"
+            value={form.author}
+            onChange={e => setForm({ ...form, author: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Category:</label>
+          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+            <option>Tech</option>
+            <option>General</option>
+            <option>Questions</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Content:</label>
+          <textarea
+            required
+            rows="3"
+            placeholder="Write your discussion post..."
+            value={form.content}
+            onChange={e => setForm({ ...form, content: e.target.value })}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="submit" className="btn btn-primary">Post Thread</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -66,32 +119,56 @@ export default function App() {
 
   useEffect(() => { loadPosts(); }, []);
 
-  const addPost = async (postData) => {
+  const handleAdd = async (formData) => {
     await fetch('/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postData)
+      body: JSON.stringify(formData)
     });
     loadPosts();
   };
 
-  const upvotePost = async (id) => {
+  const handleUpvote = async (id) => {
     await fetch(`/api/posts/${id}/upvote`, { method: 'PUT' });
     loadPosts();
   };
 
-  const deletePost = async (id) => {
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this post?')) return;
     await fetch(`/api/posts/${id}`, { method: 'DELETE' });
     loadPosts();
   };
 
   return (
-    <ForumContext.Provider value={{ posts, addPost, upvotePost, deletePost }}>
-      <div style={{ maxWidth: 750, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-        <h2>💬 Discussion Forum (Roll 52-59 - React Context API)</h2>
-        <PostForm />
-        <PostList />
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>DevConnect Discussion Forum (Roll 52-59)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">All Threads</Link>
+            <Link to="/add" className="nav-link">New Thread</Link>
+          </nav>
+        </header>
+
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <PostsListView
+                  posts={posts}
+                  onUpvote={handleUpvote}
+                  onDelete={handleDelete}
+                />
+              }
+            />
+            <Route
+              path="/add"
+              element={<AddPostView onAdd={handleAdd} />}
+            />
+          </Routes>
+        </main>
       </div>
-    </ForumContext.Provider>
+    </Router>
   );
 }

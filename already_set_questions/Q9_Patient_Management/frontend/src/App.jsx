@@ -1,8 +1,163 @@
 import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import './style.css';
+
+function PatientListView({ patients, onToggleStatus, onDelete, filter, setFilter, search, setSearch }) {
+  const navigate = useNavigate();
+
+  const filtered = patients
+    .filter(p => filter === 'All' || p.status === filter)
+    .filter(p =>
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.condition || '').toLowerCase().includes(search.toLowerCase())
+    );
+
+  return (
+    <div className="card">
+      <div className="controls">
+        <input
+          placeholder="Search by name or condition..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="search-input"
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['All', 'Admitted', 'Discharged'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`btn ${filter === f ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            >
+              {f}
+            </button>
+          ))}
+          <button onClick={() => navigate('/admit')} className="btn btn-primary btn-sm">
+            Admit Patient
+          </button>
+        </div>
+      </div>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th>PATIENT NAME</th>
+            <th>AGE</th>
+            <th>GENDER</th>
+            <th>CONDITION</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(p => (
+            <tr key={p._id}>
+              <td><strong>{p.name}</strong></td>
+              <td>{p.age}</td>
+              <td>{p.gender}</td>
+              <td>{p.condition}</td>
+              <td>
+                <span className={`badge ${p.status === 'Admitted' ? 'badge-admitted' : 'badge-discharged'}`}>
+                  {p.status}
+                </span>
+              </td>
+              <td>
+                <button onClick={() => onToggleStatus(p)} className="btn btn-secondary btn-sm" style={{ marginRight: 6 }}>
+                  Toggle Status
+                </button>
+                <button onClick={() => onDelete(p._id)} className="btn btn-danger btn-sm">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {filtered.length === 0 && (
+            <tr>
+              <td colSpan="6" style={{ textAlign: 'center', padding: 20 }}>
+                No patient records found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AddPatientView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', age: '', gender: 'Male', condition: '', status: 'Admitted' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(form);
+    navigate('/');
+  };
+
+  return (
+    <div className="card">
+      <h2>Admit / Register Patient</h2>
+      <form onSubmit={handleSubmit} className="form" style={{ marginTop: 16 }}>
+        <div className="form-group">
+          <label>Full Name:</label>
+          <input
+            required
+            placeholder="e.g. Ramesh Gupta"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Age:</label>
+          <input
+            type="number"
+            required
+            placeholder="e.g. 45"
+            value={form.age}
+            onChange={e => setForm({ ...form, age: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Gender:</label>
+          <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Medical Condition / Diagnosis:</label>
+          <input
+            required
+            placeholder="e.g. Hypertension, Viral Fever"
+            value={form.condition}
+            onChange={e => setForm({ ...form, condition: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Admission Status:</label>
+          <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+            <option>Admitted</option>
+            <option>Discharged</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="submit" className="btn btn-primary">Save Patient</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export default function App() {
   const [patients, setPatients] = useState([]);
-  const [form, setForm] = useState({ name: '', age: '', gender: 'Male', condition: '', status: 'Admitted' });
+  const [filter, setFilter] = useState('All');
+  const [search, setSearch] = useState('');
 
   const loadPatients = async () => {
     const res = await fetch('/api/patients');
@@ -11,14 +166,12 @@ export default function App() {
 
   useEffect(() => { loadPatients(); }, []);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
+  const handleAdd = async (formData) => {
     await fetch('/api/patients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(formData)
     });
-    setForm({ name: '', age: '', gender: 'Male', condition: '', status: 'Admitted' });
     loadPatients();
   };
 
@@ -33,61 +186,45 @@ export default function App() {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Delete this patient record?')) return;
     await fetch(`/api/patients/${id}`, { method: 'DELETE' });
     loadPatients();
   };
 
   return (
-    <div style={{ maxWidth: 850, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-      <h2>🏥 Patient Record Management System (Roll Q3)</h2>
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>Patient Management System (Roll Q9)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Patient Records</Link>
+            <Link to="/admit" className="nav-link">Admit Patient</Link>
+          </nav>
+        </header>
 
-      {/* Form */}
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20, background: '#f8fafc', padding: 15, borderRadius: 6, border: '1px solid #e2e8f0' }}>
-        <input placeholder="Patient Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ padding: 8, flex: 2 }} />
-        <input placeholder="Age" type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} required style={{ padding: 8, width: 80 }} />
-        <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} style={{ padding: 8 }}>
-          <option>Male</option><option>Female</option><option>Other</option>
-        </select>
-        <input placeholder="Medical Condition" value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} required style={{ padding: 8, flex: 2 }} />
-        <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={{ padding: 8 }}>
-          <option>Admitted</option><option>Discharged</option>
-        </select>
-        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          Add Patient
-        </button>
-      </form>
-
-      {/* Table */}
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ background: '#f1f5f9' }}>
-            <th>Name</th><th>Age</th><th>Gender</th><th>Condition</th><th>Status</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map(p => (
-            <tr key={p._id}>
-              <td>{p.name}</td><td>{p.age}</td><td>{p.gender}</td><td>{p.condition}</td>
-              <td>
-                <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 12, fontWeight: 'bold', background: p.status === 'Admitted' ? '#fee2e2' : '#dcfce7', color: p.status === 'Admitted' ? '#991b1b' : '#166534' }}>
-                  {p.status}
-                </span>
-              </td>
-              <td>
-                <button onClick={() => handleToggleStatus(p)} style={{ marginRight: 6, padding: '3px 8px', cursor: 'pointer' }}>
-                  Toggle Status
-                </button>
-                <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: 4, cursor: 'pointer' }}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-          {patients.length === 0 && (
-            <tr><td colSpan="6" style={{ textAlign: 'center' }}>No patient records found.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <PatientListView
+                  patients={patients}
+                  onToggleStatus={handleToggleStatus}
+                  onDelete={handleDelete}
+                  filter={filter}
+                  setFilter={setFilter}
+                  search={search}
+                  setSearch={setSearch}
+                />
+              }
+            />
+            <Route
+              path="/admit"
+              element={<AddPatientView onAdd={handleAdd} />}
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }

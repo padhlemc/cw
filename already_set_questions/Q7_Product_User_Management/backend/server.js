@@ -11,19 +11,17 @@ app.use(cors());
 app.use(express.json());
 
 const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(distPath));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(frontendPath));
 
 let memoryProducts = [
-  { _id: '1', name: 'Wireless Mouse', price: 699, stock: 45, category: 'Electronics' },
-  { _id: '2', name: 'Mechanical Keyboard', price: 2499, stock: 20, category: 'Electronics' }
-];
-let memoryUsers = [
-  { _id: '101', name: 'Alex Johnson', email: 'alex@example.com', phone: '9876543210' }
+  { _id: '1', name: 'Laptop Stand', price: 1299, stock: 15 },
+  { _id: '2', name: 'Wireless Mouse', price: 799, stock: 25 }
 ];
 
 let db = null;
-const client = new MongoClient('mongodb://127.0.0.1:27017');
+const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 1500 });
 client.connect()
   .then(async () => {
     db = client.db(DB_NAME);
@@ -31,60 +29,43 @@ client.connect()
     if (await db.collection('products').countDocuments() === 0) {
       await db.collection('products').insertMany(memoryProducts);
     }
-    if (await db.collection('users').countDocuments() === 0) {
-      await db.collection('users').insertMany(memoryUsers);
-    }
   })
-  .catch(() => console.log('[MongoDB] Offline - Using memory'));
+  .catch(() => console.log('[MongoDB Offline] Running in memory mode'));
 
-// --- PRODUCTS API ---
+// GET products
 app.get('/api/products', async (req, res) => {
   if (db) return res.json(await db.collection('products').find().toArray());
   res.json(memoryProducts);
 });
 
+// POST product
 app.post('/api/products', async (req, res) => {
-  const { name, price, stock, category } = req.body;
-  if (!name || Number(price) <= 0 || Number(stock) < 0) {
-    return res.status(400).json({ error: 'Price must be > 0 and stock >= 0' });
-  }
-  const prod = { name, price: Number(price), stock: Number(stock), category: category || 'General', _id: new ObjectId().toString() };
-  if (db) await db.collection('products').insertOne(prod);
-  else memoryProducts.push(prod);
-  res.status(201).json(prod);
+  const newProduct = { ...req.body, _id: new ObjectId().toString() };
+  if (db) await db.collection('products').insertOne(newProduct);
+  else memoryProducts.push(newProduct);
+  res.status(201).json(newProduct);
 });
 
+// DELETE product
 app.delete('/api/products/:id', async (req, res) => {
   const { id } = req.params;
-  if (db) await db.collection('products').deleteOne({ _id: id });
-  else memoryProducts = memoryProducts.filter(p => p._id !== id);
-  res.json({ message: 'Deleted' });
-});
-
-// --- USERS API ---
-app.get('/api/users', async (req, res) => {
-  if (db) return res.json(await db.collection('users').find().toArray());
-  res.json(memoryUsers);
-});
-
-app.post('/api/users', async (req, res) => {
-  const { name, email, phone } = req.body;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^\d{10}$/;
-  if (!emailRegex.test(email) || !phoneRegex.test(phone)) {
-    return res.status(400).json({ error: 'Invalid email or 10-digit phone number' });
+  if (db) {
+    const query = ObjectId.isValid(id) && String(new ObjectId(id)) === id ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] } : { _id: id };
+    await db.collection('products').deleteOne(query);
+  } else {
+    memoryProducts = memoryProducts.filter(p => String(p._id) !== String(id));
   }
-  const user = { name, email, phone, _id: new ObjectId().toString() };
-  if (db) await db.collection('users').insertOne(user);
-  else memoryUsers.push(user);
-  res.status(201).json(user);
+  res.json({ message: 'Product deleted' });
 });
 
-app.delete('/api/users/:id', async (req, res) => {
-  const { id } = req.params;
-  if (db) await db.collection('users').deleteOne({ _id: id });
-  else memoryUsers = memoryUsers.filter(u => u._id !== id);
-  res.json({ message: 'Deleted' });
+// SPA wildcard fallback
+app.get('*', (req, res) => {
+  const fs = require('fs');
+  const indexDist = path.join(distPath, 'index.html');
+  const indexDev = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexDist)) return res.sendFile(indexDist);
+  if (fs.existsSync(indexDev)) return res.sendFile(indexDev);
+  res.send('<!DOCTYPE html><html><body><div id="root">Ready</div></body></html>');
 });
 
-app.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Q7 Product Management Server running on http://localhost:${PORT}`));

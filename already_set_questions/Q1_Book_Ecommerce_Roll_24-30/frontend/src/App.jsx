@@ -1,49 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link } from 'react-router-dom';
+import './style.css';
 
 function CatalogView({ books, cart, onAddToCart, onPlaceOrder, search, setSearch }) {
   const filtered = books.filter(b => (b.title || '').toLowerCase().includes(search.toLowerCase()));
-  const cartTotal = cart.reduce((sum, item) => sum + Number(item.price), 0);
+  const cartTotal = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
   return (
     <div>
       <h3>Book Catalog</h3>
-      <input
-        placeholder="Search books..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{ width: '100%', boxSizing: 'border-box', padding: 8, marginBottom: 15 }}
-      />
+      <div className="controls">
+        <input
+          placeholder="Search books..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="search-input"
+        />
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
         {filtered.map(book => (
-          <div key={book._id} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 6, background: '#fff' }}>
-            <h4 style={{ margin: '0 0 6px' }}>{book.title}</h4>
-            <p style={{ margin: '0 0 4px', color: '#666', fontSize: 13 }}>By {book.author}</p>
-            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>₹{book.price}</p>
-            <button
-              onClick={() => onAddToCart(book)}
-              style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
-            >
+          <div key={book._id} className="card">
+            <h4>{book.title}</h4>
+            <p style={{ color: '#666', fontSize: 13, margin: '4px 0' }}>By {book.author}</p>
+            <p style={{ fontWeight: 'bold', margin: '4px 0 8px' }}>INR {book.price}</p>
+            <button onClick={() => onAddToCart(book)} className="btn btn-primary btn-sm">
               Add to Cart
             </button>
           </div>
         ))}
       </div>
 
-      <div style={{ marginTop: 25, padding: 15, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }}>
+      <div style={{ marginTop: 20, padding: 15, background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6 }}>
         <h4>Shopping Cart ({cart.length} items)</h4>
-        {cart.length === 0 ? <p>Cart is empty.</p> : (
+        {cart.length === 0 ? <p className="empty">Cart is empty.</p> : (
           <div>
             <ul>
               {cart.map((item, idx) => (
-                <li key={idx}>{item.title} - ₹{item.price}</li>
+                <li key={idx} style={{ margin: '4px 0' }}>{item.title} - INR {item.price}</li>
               ))}
             </ul>
-            <p><strong>Total: ₹{cartTotal}</strong></p>
-            <button
-              onClick={onPlaceOrder}
-              style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}
-            >
+            <p style={{ margin: '8px 0' }}><strong>Total: INR {cartTotal}</strong></p>
+            <button onClick={onPlaceOrder} className="btn btn-primary btn-sm">
               Checkout & Place Order
             </button>
           </div>
@@ -63,34 +60,32 @@ function AdminView({ books, onAddBook, onDeleteBook }) {
   };
 
   return (
-    <div>
+    <div className="card">
       <h3>Admin: Manage Inventory</h3>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-        <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required style={{ padding: 8 }} />
-        <input placeholder="Author" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} required style={{ padding: 8 }} />
-        <input placeholder="Price" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required style={{ padding: 8, width: 90 }} />
-        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ padding: 8 }}>
+      <form onSubmit={handleSubmit} className="form" style={{ maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap' }}>
+        <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+        <input placeholder="Author" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} required />
+        <input placeholder="Price" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required style={{ width: 100 }} />
+        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
           <option>Tech</option>
           <option>Self-Help</option>
           <option>Fiction</option>
         </select>
-        <button type="submit" style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>
-          Add Book
-        </button>
+        <button type="submit" className="btn btn-primary">Add Book</button>
       </form>
 
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="table" style={{ marginTop: 20 }}>
         <thead>
-          <tr style={{ background: '#f1f5f9' }}>
-            <th>Title</th><th>Author</th><th>Price</th><th>Action</th>
+          <tr>
+            <th>TITLE</th><th>AUTHOR</th><th>PRICE</th><th>ACTION</th>
           </tr>
         </thead>
         <tbody>
           {books.map(b => (
             <tr key={b._id}>
-              <td>{b.title}</td><td>{b.author}</td><td>₹{b.price}</td>
+              <td>{b.title}</td><td>{b.author}</td><td>INR {b.price}</td>
               <td>
-                <button onClick={() => onDeleteBook(b._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>
+                <button onClick={() => onDeleteBook(b._id)} className="btn btn-danger btn-sm">
                   Delete
                 </button>
               </td>
@@ -109,8 +104,7 @@ export default function App() {
 
   const loadBooks = async () => {
     const res = await fetch('/api/books');
-    const data = await res.json();
-    setBooks(Array.isArray(data) ? data : []);
+    setBooks(await res.json());
   };
 
   useEffect(() => { loadBooks(); }, []);
@@ -133,7 +127,7 @@ export default function App() {
     await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: cart, total: cart.reduce((s, b) => s + Number(b.price), 0) })
+      body: JSON.stringify({ items: cart, total: cart.reduce((s, b) => s + Number(b.price || 0), 0) })
     });
     alert('Order placed successfully!');
     setCart([]);
@@ -141,12 +135,14 @@ export default function App() {
 
   return (
     <HashRouter>
-      <div style={{ maxWidth: 850, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-        <h2>📚 ReadHub Book Store (Roll 24-30)</h2>
-        <nav style={{ display: 'flex', gap: 15, marginBottom: 20, borderBottom: '1px solid #ddd', paddingBottom: 10 }}>
-          <Link to="/" style={{ textDecoration: 'none', color: '#2563eb', fontWeight: 'bold' }}>Catalog & Cart</Link>
-          <Link to="/admin" style={{ textDecoration: 'none', color: '#2563eb', fontWeight: 'bold' }}>Admin Panel</Link>
-        </nav>
+      <div className="container">
+        <header className="header">
+          <h1>ReadHub Book Store (Roll 24-30)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Catalog & Cart</Link>
+            <Link to="/admin" className="nav-link">Admin Panel</Link>
+          </nav>
+        </header>
 
         <Routes>
           <Route path="/" element={

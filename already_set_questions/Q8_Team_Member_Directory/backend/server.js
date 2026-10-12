@@ -11,20 +11,18 @@ app.use(cors());
 app.use(express.json());
 
 const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(distPath));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(frontendPath));
 
 let memoryMembers = [
-  { _id: '1', name: 'Aarav Patel', role: 'Frontend Engineer', email: 'aarav@company.com', skills: 'React, CSS' },
-  { _id: '2', name: 'Neha Sharma', role: 'Backend Developer', email: 'neha@company.com', skills: 'Node, Express, MongoDB' },
-  { _id: '3', name: 'Rohan Verma', role: 'DevOps Lead', email: 'rohan@company.com', skills: 'Docker, CI/CD' },
-  { _id: '4', name: 'Pooja Iyer', role: 'UI/UX Designer', email: 'pooja@company.com', skills: 'Figma, Prototyping' },
-  { _id: '5', name: 'Vikram Singh', role: 'QA Engineer', email: 'vikram@company.com', skills: 'Jest, Cypress' },
-  { _id: '6', name: 'Ananya Roy', role: 'Product Manager', email: 'ananya@company.com', skills: 'Agile, Scrum' }
+  { _id: '1', name: 'Aakash Verma', role: 'Frontend Lead', dept: 'Engineering', email: 'aakash@example.com' },
+  { _id: '2', name: 'Ritu Sen', role: 'Product Designer', dept: 'Design', email: 'ritu@example.com' },
+  { _id: '3', name: 'Kunal Deshmukh', role: 'Backend Engineer', dept: 'Engineering', email: 'kunal@example.com' }
 ];
 
 let db = null;
-const client = new MongoClient('mongodb://127.0.0.1:27017');
+const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 1500 });
 client.connect()
   .then(async () => {
     db = client.db(DB_NAME);
@@ -33,25 +31,42 @@ client.connect()
       await db.collection('members').insertMany(memoryMembers);
     }
   })
-  .catch(() => console.log('[MongoDB] Offline - Using memory'));
+  .catch(() => console.log('[MongoDB Offline] Running in memory mode'));
 
+// GET members
 app.get('/api/members', async (req, res) => {
   if (db) return res.json(await db.collection('members').find().toArray());
   res.json(memoryMembers);
 });
 
+// POST member
 app.post('/api/members', async (req, res) => {
-  const member = { ...req.body, _id: new ObjectId().toString() };
-  if (db) await db.collection('members').insertOne(member);
-  else memoryMembers.push(member);
-  res.status(201).json(member);
+  const newMember = { ...req.body, _id: new ObjectId().toString() };
+  if (db) await db.collection('members').insertOne(newMember);
+  else memoryMembers.push(newMember);
+  res.status(201).json(newMember);
 });
 
+// DELETE member
 app.delete('/api/members/:id', async (req, res) => {
   const { id } = req.params;
-  if (db) await db.collection('members').deleteOne({ _id: id });
-  else memoryMembers = memoryMembers.filter(m => m._id !== id);
-  res.json({ message: 'Deleted' });
+  if (db) {
+    const query = ObjectId.isValid(id) && String(new ObjectId(id)) === id ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] } : { _id: id };
+    await db.collection('members').deleteOne(query);
+  } else {
+    memoryMembers = memoryMembers.filter(m => String(m._id) !== String(id));
+  }
+  res.json({ message: 'Member deleted' });
 });
 
-app.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`));
+// SPA wildcard fallback
+app.get('*', (req, res) => {
+  const fs = require('fs');
+  const indexDist = path.join(distPath, 'index.html');
+  const indexDev = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexDist)) return res.sendFile(indexDist);
+  if (fs.existsSync(indexDev)) return res.sendFile(indexDev);
+  res.send('<!DOCTYPE html><html><body><div id="root">Ready</div></body></html>');
+});
+
+app.listen(PORT, () => console.log(`Q8 Team Directory Server running on http://localhost:${PORT}`));

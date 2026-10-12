@@ -1,154 +1,118 @@
 /**
  * ==============================================================================
- * UNIVERSAL EXAM SERVER (Express + Native MongoDB MongoClient)
+ * UNIVERSAL EXAM BACKEND (server.js) - Express + Native MongoDB Driver
  * ==============================================================================
- * Examiner Marking Points:
- * 1. Express setup & middleware: cors, express.json
- * 2. MongoDB Native Driver: MongoClient, ObjectId (NO Mongoose)
- * 3. 4 Standard REST API Endpoints: GET, POST, PUT, DELETE
- * 4. Automatic In-Memory Fallback: Lab computer NEVER crashes if MongoDB is stopped
- * 5. Serves aesthetic React frontend on the same port (5000)
+ * Key Examiner Marking Points:
+ * 1. Express setup & middlewares (cors, express.json)
+ * 2. MongoDB Native Driver (MongoClient, ObjectId) with in-memory zero-crash fallback
+ * 3. Complete REST API routes (GET, POST, PUT, DELETE)
+ * 4. Serving static React frontend and handling React Router SPA routes
  * ==============================================================================
  */
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const DB_NAME = 'exam_starter_db';
-const COLLECTION = 'items';
 
-// 1. MIDDLEWARES: Parse JSON body & allow cross-origin requests
+// Essential Middlewares
 app.use(cors());
 app.use(express.json());
 
-// 2. STATIC FILES: Serve modern frontend assets
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Serve static frontend files (both production dist and source frontend)
+const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+const frontendPath = path.join(__dirname, '..', 'frontend');
+app.use(express.static(distPath));
+app.use(express.static(frontendPath));
 
-// 3. IN-MEMORY FALLBACK (Guarantees zero crashes if MongoDB service is stopped)
+/* ==============================================================================
+ * CHANGE ZONE 1: DATABASE NAME & INITIAL DATA (Change to match your exam question)
+ * ============================================================================== */
+const DB_NAME = 'exam_starter_db';
+
+// Fallback in-memory data (Ensures code NEVER crashes if Mongo is stopped on lab PC)
 let memoryItems = [
   { _id: '1', title: 'Sample Item Alpha', category: 'General', status: 'Active' },
-  { _id: '2', title: 'Sample Item Beta', category: 'Urgent', status: 'Pending' },
-  { _id: '3', title: 'Sample Item Gamma', category: 'General', status: 'Completed' }
+  { _id: '2', title: 'Sample Item Beta', category: 'Urgent', status: 'Pending' }
 ];
 
-// 4. MONGODB NATIVE DRIVER CONNECTION
+// Native MongoDB Connection via MongoClient with 1.5s timeout
 let db = null;
-const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 2000 });
-
+const client = new MongoClient('mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 1500 });
 client.connect()
   .then(async () => {
     db = client.db(DB_NAME);
-    console.log(`[MongoDB] Connected: Database "${DB_NAME}" -> Collection "${COLLECTION}"`);
-
-    // Auto-seed sample items if collection is empty
-    const count = await db.collection(COLLECTION).countDocuments();
-    if (count === 0) {
-      await db.collection(COLLECTION).insertMany([
-        { title: 'Sample Item Alpha', category: 'General', status: 'Active' },
-        { title: 'Sample Item Beta', category: 'Urgent', status: 'Pending' },
-        { title: 'Sample Item Gamma', category: 'General', status: 'Completed' }
-      ]);
-      console.log('[MongoDB] Seeded initial sample items.');
+    console.log('[MongoDB] Connected successfully to database: ' + DB_NAME);
+    if (await db.collection('items').countDocuments() === 0) {
+      await db.collection('items').insertMany(memoryItems);
     }
   })
-  .catch(() => console.log('[MongoDB] Offline! Seamless in-memory fallback active.'));
+  .catch(() => console.log('[MongoDB Offline] Running in-memory mode. Server will not crash.'));
 
-// Helper: Match both native ObjectId and custom string IDs
-function buildFilter(id) {
-  if (ObjectId.isValid(id) && id.length === 24) {
-    return { $or: [{ _id: new ObjectId(id) }, { _id: id }] };
-  }
-  return { _id: id };
-}
-
-// ==============================================================================
-// THE 4 CORE REST API ENDPOINTS
-// ==============================================================================
+/* ==============================================================================
+ * REST API ENDPOINTS (The 4 core routes examiners grade)
+ * ============================================================================== */
 
 // ROUTE 1: GET ALL ITEMS -> db.collection.find().toArray()
 app.get('/api/items', async (req, res) => {
-  try {
-    if (db) {
-      const docs = await db.collection(COLLECTION).find().toArray();
-      return res.json(docs.map(doc => ({ ...doc, _id: String(doc._id) })));
-    }
-    res.json(memoryItems);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (db) {
+    const data = await db.collection('items').find().toArray();
+    return res.json(data);
   }
+  res.json(memoryItems);
 });
 
-// ROUTE 2: CREATE ITEM -> db.collection.insertOne(req.body)
+// ROUTE 2: CREATE NEW ITEM -> db.collection.insertOne(req.body)
 app.post('/api/items', async (req, res) => {
-  try {
-    const item = {
-      title: req.body.title || 'Untitled',
-      category: req.body.category || 'General',
-      status: req.body.status || 'Active',
-      createdAt: new Date().toISOString()
-    };
-
-    if (db) {
-      const result = await db.collection(COLLECTION).insertOne(item);
-      item._id = String(result.insertedId);
-    } else {
-      item._id = String(Date.now());
-      memoryItems.push(item);
-    }
-
-    console.log(`[POST] Created item: "${item.title}" (_id: ${item._id})`);
-    res.status(201).json(item);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const newItem = { ...req.body, _id: new ObjectId().toString() };
+  if (db) {
+    await db.collection('items').insertOne(newItem);
+  } else {
+    memoryItems.push(newItem);
   }
+  res.status(201).json(newItem);
 });
 
-// ROUTE 3: UPDATE ITEM -> db.collection.updateOne(...)
+// ROUTE 3: UPDATE ITEM -> db.collection.updateOne({ _id }, { $set: req.body })
 app.put('/api/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (db) {
-      await db.collection(COLLECTION).updateOne(buildFilter(id), { $set: req.body });
-    } else {
-      memoryItems = memoryItems.map(item => String(item._id) === String(id) ? { ...item, ...req.body } : item);
-    }
-    console.log(`[PUT] Updated item ID: ${id}`);
-    res.json({ message: 'Updated' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const { id } = req.params;
+  const updates = { ...req.body };
+  delete updates._id;
+
+  if (db) {
+    const query = ObjectId.isValid(id) && String(new ObjectId(id)) === id ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] } : { _id: id };
+    await db.collection('items').updateOne(query, { $set: updates });
+  } else {
+    memoryItems = memoryItems.map(item => String(item._id) === String(id) ? { ...item, ...updates } : item);
   }
+  res.json({ message: 'Record updated', id });
 });
 
-// ROUTE 4: DELETE ITEM -> db.collection.deleteOne(...)
+// ROUTE 4: DELETE ITEM -> db.collection.deleteOne({ _id })
 app.delete('/api/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (db) {
-      const result = await db.collection(COLLECTION).deleteOne(buildFilter(id));
-      console.log(`[DELETE] Deleted ID: ${id} (Deleted count: ${result.deletedCount})`);
-    } else {
-      memoryItems = memoryItems.filter(item => String(item._id) !== String(id));
-    }
-    res.json({ success: true, id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const { id } = req.params;
+
+  if (db) {
+    const query = ObjectId.isValid(id) && String(new ObjectId(id)) === id ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] } : { _id: id };
+    await db.collection('items').deleteOne(query);
+  } else {
+    memoryItems = memoryItems.filter(item => String(item._id) !== String(id));
   }
+  res.json({ message: 'Record deleted', id });
 });
 
-// 5. CATCH-ALL ROUTE: Serve React UI
+// ROUTE 5: SPA WILDCARD ROUTE (React Router navigation support)
 app.get('*', (req, res) => {
-  const distHtml = path.join(__dirname, '..', 'frontend', 'dist', 'index.html');
-  const rawHtml = path.join(__dirname, '..', 'frontend', 'index.html');
-  res.sendFile(fs.existsSync(distHtml) ? distHtml : rawHtml);
+  const fs = require('fs');
+  const indexDist = path.join(distPath, 'index.html');
+  const indexDev = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexDist)) return res.sendFile(indexDist);
+  if (fs.existsSync(indexDev)) return res.sendFile(indexDev);
+  res.send('<!DOCTYPE html><html><body><div id="root">Backend ready.</div></body></html>');
 });
 
-// 6. START SERVER
-app.listen(PORT, () => {
-  console.log(`[SERVER] Universal Exam Starter running at: http://localhost:${PORT}`);
-});
+// Start HTTP server
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

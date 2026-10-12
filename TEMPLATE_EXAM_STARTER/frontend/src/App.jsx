@@ -1,159 +1,227 @@
 /**
  * ==============================================================================
- * THE UNIVERSAL EXAM REACT DASHBOARD (Lean, Aesthetic, 4 Change Zones)
+ * UNIVERSAL EXAM FRONTEND (App.jsx) - React 18 + React Router v6
  * ==============================================================================
  * Examiner Marking Points:
- * 1. useState: items list, form fields, search filter
- * 2. useEffect: auto-load records on component mount
- * 3. Controlled form inputs with standard validation
- * 4. Full REST communication: fetch with GET, POST, DELETE
+ * 1. React Router: HashRouter with Routes, Route, Link, useNavigate
+ * 2. React Hooks: useState (items, form, search) & useEffect (fetch on mount)
+ * 3. Controlled Form: value={form.title} and onChange={e => setForm(...)}
+ * 4. API Calls: fetch() with GET, POST, PUT, DELETE methods
+ * 5. Rendering: items.map() with unique key, search filter, delete & status actions
  * ==============================================================================
  */
 
 import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './style.css';
 
+/* ==============================================================================
+ * CHANGE ZONE 1: INITIAL FORM FIELDS (Change these to match your question)
+ * ==============================================================================
+ * Example for Books:   { title: '', author: '', price: '', category: 'Tech' }
+ * Example for Tasks:   { title: '', priority: 'High', dueDate: '', status: 'Pending' }
+ * Example for Expense: { title: '', amount: '', category: 'Food', date: '' }
+ */
+const INITIAL_FORM = {
+  title: '',
+  category: 'General',
+  status: 'Active'
+};
+
+// ------------------------------------------------------------------------------
+// ROUTE 1: RECORDS TABLE VIEW ('/')
+// ------------------------------------------------------------------------------
+function ListView({ items, onDelete, onToggle, search, setSearch }) {
+  const navigate = useNavigate();
+
+  // Filter records by search keyword
+  const filtered = items.filter(it =>
+    Object.values(it).some(val => String(val || '').toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="card">
+      <div className="controls">
+        <input
+          placeholder="Search records by keyword..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="search-input"
+        />
+        <button onClick={() => navigate('/add')} className="btn btn-primary">
+          Add New Record
+        </button>
+      </div>
+
+      <div className="table-wrapper">
+        <table className="table">
+          <thead>
+            <tr>
+              {/* CHANGE ZONE 2: TABLE HEADERS */}
+              <th>TITLE</th>
+              <th>CATEGORY</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(it => (
+              <tr key={it._id}>
+                {/* CHANGE ZONE 3: TABLE DATA CELLS */}
+                <td>{it.title}</td>
+                <td>{it.category}</td>
+                <td>
+                  <span className={`badge ${it.status === 'Active' ? 'badge-good' : 'badge-warn'}`}>
+                    {it.status}
+                  </span>
+                </td>
+                <td>
+                  <button onClick={() => onToggle(it)} className="btn btn-secondary btn-sm">
+                    Toggle
+                  </button>
+                  <button onClick={() => onDelete(it._id)} className="btn btn-danger btn-sm">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan="4" className="empty">
+                  No records found. Click "Add New Record" to add one.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------------------
+// ROUTE 2: ADD RECORD FORM VIEW ('/add')
+// ------------------------------------------------------------------------------
+function AddView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState(INITIAL_FORM);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await onAdd(form);
+    navigate('/'); // Redirect back to table
+  };
+
+  return (
+    <div className="card">
+      <h2>Add New Record</h2>
+      <form onSubmit={handleSubmit} className="form">
+        {/* CHANGE ZONE 4: FORM INPUT FIELDS */}
+        <div className="form-group">
+          <label>Title:</label>
+          <input
+            required
+            placeholder="Enter title"
+            value={form.title}
+            onChange={e => setForm({ ...form, title: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Category:</label>
+          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+            <option>General</option>
+            <option>Urgent</option>
+            <option>Optional</option>
+          </select>
+        </div>
+
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary">Save Record</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------------------
+// MASTER APP CONTAINER (REACT ROUTER WRAPPER)
+// ------------------------------------------------------------------------------
 export default function App() {
-  // 1. STATE: Database records list
   const [items, setItems] = useState([]);
-
-  // 2. STATE [CHANGE ZONE 3]: Form input state
-  const [form, setForm] = useState({ title: '', category: 'General', status: 'Active' });
-
-  // 3. STATE: Real-time search query
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  // 4. API: Fetch all records from Express + MongoDB
+  // 1. Fetch items from backend
   const loadData = async () => {
     try {
-      setLoading(true);
       const res = await fetch('/api/items');
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.log('Backend fetch error:', e);
     }
   };
 
   useEffect(() => { loadData(); }, []);
 
-  // 5. API: Submit new record (POST)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.title.trim()) return;
-
+  // 2. Add item via POST /api/items
+  const handleAdd = async (newRecord) => {
     await fetch('/api/items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(newRecord)
     });
-
-    setForm({ title: '', category: 'General', status: 'Active' });
     loadData();
   };
 
-  // 6. API: Delete record by ID (DELETE)
+  // 3. Delete item via DELETE /api/items/:id
   const handleDelete = async (id) => {
+    if (!window.confirm('Delete this record?')) return;
     await fetch(`/api/items/${id}`, { method: 'DELETE' });
     loadData();
   };
 
-  // 7. FILTER: Search filtering
-  const filtered = items.filter(item =>
-    (item.title || '').toLowerCase().includes(search.toLowerCase())
-  );
+  // 4. Update status via PUT /api/items/:id
+  const handleToggle = async (item) => {
+    const nextStatus = item.status === 'Active' ? 'Pending' : 'Active';
+    await fetch(`/api/items/${item._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus })
+    });
+    loadData();
+  };
 
   return (
-    <div className="card">
-      {/* --- DASHBOARD HEADER --- */}
-      <div className="header">
-        <div>
-          <h1 className="title">Exam Starter Dashboard</h1>
-          <p style={{ fontSize: '13px', color: '#64748b' }}>Universal Full-Stack CRUD (MongoDB + Express + React)</p>
-        </div>
-        <span className="db-pill">MongoDB Connected</span>
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>Exam Management Dashboard</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Records List</Link>
+            <Link to="/add" className="nav-link">Add Record</Link>
+          </nav>
+        </header>
+
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ListView
+                  items={items}
+                  onDelete={handleDelete}
+                  onToggle={handleToggle}
+                  search={search}
+                  setSearch={setSearch}
+                />
+              }
+            />
+            <Route path="/add" element={<AddView onAdd={handleAdd} />} />
+          </Routes>
+        </main>
       </div>
-
-      {/* --- CHANGE ZONE 3: FORM INPUTS --- */}
-      <form onSubmit={handleSubmit} className="form-grid">
-        <input
-          placeholder="Item title / name..."
-          value={form.title}
-          onChange={e => setForm({ ...form, title: e.target.value })}
-          required
-          style={{ flex: 2 }}
-        />
-        <select
-          value={form.category}
-          onChange={e => setForm({ ...form, category: e.target.value })}
-          style={{ flex: 1 }}
-        >
-          <option value="General">General</option>
-          <option value="Urgent">Urgent</option>
-          <option value="Optional">Optional</option>
-        </select>
-        <select
-          value={form.status}
-          onChange={e => setForm({ ...form, status: e.target.value })}
-          style={{ flex: 1 }}
-        >
-          <option value="Active">Active</option>
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-        </select>
-        <button type="submit" className="btn-primary">
-          Add Item
-        </button>
-      </form>
-
-      {/* --- SEARCH FILTER --- */}
-      <input
-        type="text"
-        className="search-input"
-        placeholder="Search items by title..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
-
-      {/* --- CHANGE ZONE 4: DATA TABLE --- */}
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th style={{ textAlign: 'right' }}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(item => (
-            <tr key={item._id || item.id}>
-              <td><strong>{item.title}</strong></td>
-              <td><span className={`badge badge-${item.category}`}>{item.category}</span></td>
-              <td><span className={`badge badge-${item.status}`}>{item.status}</span></td>
-              <td style={{ textAlign: 'right' }}>
-                <button
-                  className="btn-delete"
-                  onClick={() => handleDelete(item._id || item.id)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-
-          {filtered.length === 0 && (
-            <tr>
-              <td colSpan="4" style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
-                {loading ? 'Loading records...' : 'No records found. Add one above!'}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    </Router>
   );
 }

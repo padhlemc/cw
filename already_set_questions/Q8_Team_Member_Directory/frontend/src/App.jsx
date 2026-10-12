@@ -1,42 +1,125 @@
 import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import './style.css';
 
-// Reusable Component 1: Navbar with Props
-function Navbar({ title, count }) {
+function MemberListView({ members, onDelete, deptFilter, setDeptFilter }) {
+  const navigate = useNavigate();
+  const filtered = members.filter(m => deptFilter === 'All' || m.dept === deptFilter);
+
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ddd', paddingBottom: 10, marginBottom: 20 }}>
-      <h2 style={{ margin: 0 }}>👥 {title}</h2>
-      <span style={{ background: '#2563eb', color: '#fff', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 'bold' }}>
-        Total: {count}
-      </span>
-    </header>
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['All', 'Engineering', 'Design', 'QA'].map(d => (
+            <button
+              key={d}
+              onClick={() => setDeptFilter(d)}
+              className={`btn ${deptFilter === d ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => navigate('/add')} className="btn btn-primary">
+          Add Team Member
+        </button>
+      </div>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th>NAME</th><th>ROLE</th><th>DEPARTMENT</th><th>EMAIL</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(m => (
+            <tr key={m._id}>
+              <td><strong>{m.name}</strong></td>
+              <td>{m.role}</td>
+              <td><span className="badge">{m.dept}</span></td>
+              <td>{m.email}</td>
+              <td>
+                <button onClick={() => onDelete(m._id)} className="btn btn-danger btn-sm">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {filtered.length === 0 && (
+            <tr><td colSpan="5" style={{ textAlign: 'center', padding: 20 }}>No members found.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-// Reusable Component 2: TeamCard with Props
-function TeamCard({ member, onDelete }) {
+function AddMemberView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', role: '', dept: 'Engineering', email: '' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(form);
+    navigate('/');
+  };
+
   return (
-    <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 15, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-      <h4 style={{ margin: '0 0 4px', color: '#1e293b' }}>{member.name}</h4>
-      <p style={{ margin: '0 0 4px', color: '#2563eb', fontSize: 13, fontWeight: 'bold' }}>{member.role}</p>
-      <p style={{ margin: '0 0 6px', color: '#64748b', fontSize: 13 }}>📧 {member.email}</p>
-      <p style={{ margin: '0 0 10px', fontSize: 12, background: '#f1f5f9', padding: '3px 6px', borderRadius: 4, display: 'inline-block' }}>
-        🛠 {member.skills || 'General'}
-      </p>
-      <div>
-        <button
-          onClick={() => onDelete(member._id)}
-          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
-        >
-          Remove
-        </button>
-      </div>
+    <div className="card">
+      <h2>Add New Team Member</h2>
+      <form onSubmit={handleSubmit} className="form">
+        <div className="form-group">
+          <label>Full Name:</label>
+          <input
+            required
+            placeholder="e.g. John Doe"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Role / Position:</label>
+          <input
+            required
+            placeholder="e.g. Frontend Developer"
+            value={form.role}
+            onChange={e => setForm({ ...form, role: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Department:</label>
+          <select value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })}>
+            <option>Engineering</option>
+            <option>Design</option>
+            <option>QA</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Email Address:</label>
+          <input
+            type="email"
+            required
+            placeholder="e.g. john@example.com"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="submit" className="btn btn-primary">Save Member</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
     </div>
   );
 }
 
 export default function App() {
   const [members, setMembers] = useState([]);
-  const [form, setForm] = useState({ name: '', role: '', email: '', skills: '' });
+  const [deptFilter, setDeptFilter] = useState('All');
 
   const loadMembers = async () => {
     const res = await fetch('/api/members');
@@ -45,43 +128,52 @@ export default function App() {
 
   useEffect(() => { loadMembers(); }, []);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
+  const handleAdd = async (formData) => {
     await fetch('/api/members', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(formData)
     });
-    setForm({ name: '', role: '', email: '', skills: '' });
     loadMembers();
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Delete this team member?')) return;
     await fetch(`/api/members/${id}`, { method: 'DELETE' });
     loadMembers();
   };
 
   return (
-    <div style={{ maxWidth: 850, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-      <Navbar title="Team Member Directory (Reusable Components)" count={members.length} />
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>Team Directory (Roll Q8)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Directory</Link>
+            <Link to="/add" className="nav-link">Add Member</Link>
+          </nav>
+        </header>
 
-      {/* Add Form */}
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 25, background: '#f8fafc', padding: 15, borderRadius: 6, border: '1px solid #e2e8f0' }}>
-        <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ padding: 8, flex: 1 }} />
-        <input placeholder="Job Role" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} required style={{ padding: 8, flex: 1 }} />
-        <input placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={{ padding: 8, flex: 1 }} />
-        <input placeholder="Skills (e.g. React, Node)" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ padding: 8, flex: 1 }} />
-        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          Add Member
-        </button>
-      </form>
-
-      {/* Grid of Team Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 15 }}>
-        {members.map(m => (
-          <TeamCard key={m._id} member={m} onDelete={handleDelete} />
-        ))}
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <MemberListView
+                  members={members}
+                  onDelete={handleDelete}
+                  deptFilter={deptFilter}
+                  setDeptFilter={setDeptFilter}
+                />
+              }
+            />
+            <Route
+              path="/add"
+              element={<AddMemberView onAdd={handleAdd} />}
+            />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </Router>
   );
 }

@@ -1,130 +1,162 @@
 import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import './style.css';
 
-export default function App() {
-  const [tab, setTab] = useState('products'); // 'products' or 'users'
-  const [products, setProducts] = useState([]);
-  const [users, setUsers] = useState([]);
-
-  // Forms
-  const [prodForm, setProdForm] = useState({ name: '', price: '', stock: '', category: 'Electronics' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', phone: '' });
-
-  const loadData = async () => {
-    const pRes = await fetch('/api/products');
-    setProducts(await pRes.json());
-    const uRes = await fetch('/api/users');
-    setUsers(await uRes.json());
-  };
-
-  useEffect(() => { loadData(); }, []);
-
-  // Product Submit
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    if (Number(prodForm.price) <= 0 || Number(prodForm.stock) < 0) {
-      alert('Price must be > 0 and stock >= 0');
-      return;
-    }
-    await fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prodForm)
-    });
-    setProdForm({ name: '', price: '', stock: '', category: 'Electronics' });
-    loadData();
-  };
-
-  // User Submit
-  const handleAddUser = async (e) => {
-    e.preventDefault();
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userForm.email);
-    const phoneOk = /^\d{10}$/.test(userForm.phone);
-    if (!emailOk) { alert('Please enter a valid email address.'); return; }
-    if (!phoneOk) { alert('Please enter a 10-digit phone number.'); return; }
-
-    await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userForm)
-    });
-    setUserForm({ name: '', email: '', phone: '' });
-    loadData();
-  };
-
-  const handleDeleteProduct = async (id) => {
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
-    loadData();
-  };
-
-  const handleDeleteUser = async (id) => {
-    await fetch(`/api/users/${id}`, { method: 'DELETE' });
-    loadData();
-  };
+function ProductListView({ products, onDelete }) {
+  const navigate = useNavigate();
 
   return (
-    <div style={{ maxWidth: 800, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-      <h2>📦 Product & User Management System (Regex Validated)</h2>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <button onClick={() => setTab('products')} style={{ padding: '8px 16px', background: tab === 'products' ? '#2563eb' : '#e2e8f0', color: tab === 'products' ? '#fff' : '#000', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          📦 Products ({products.length})
-        </button>
-        <button onClick={() => setTab('users')} style={{ padding: '8px 16px', background: tab === 'users' ? '#2563eb' : '#e2e8f0', color: tab === 'users' ? '#fff' : '#000', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          👥 Users ({users.length})
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3>Product Inventory ({products.length})</h3>
+        <button onClick={() => navigate('/add')} className="btn btn-primary">
+          Add New Product
         </button>
       </div>
 
-      {/* 1. Products Tab */}
-      {tab === 'products' && (
-        <div>
-          <form onSubmit={handleAddProduct} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-            <input placeholder="Product Name" value={prodForm.name} onChange={e => setProdForm({ ...prodForm, name: e.target.value })} required style={{ padding: 8 }} />
-            <input placeholder="Price (₹ > 0)" type="number" value={prodForm.price} onChange={e => setProdForm({ ...prodForm, price: e.target.value })} required style={{ padding: 8, width: 110 }} />
-            <input placeholder="Stock (>= 0)" type="number" value={prodForm.stock} onChange={e => setProdForm({ ...prodForm, stock: e.target.value })} required style={{ padding: 8, width: 110 }} />
-            <select value={prodForm.category} onChange={e => setProdForm({ ...prodForm, category: e.target.value })} style={{ padding: 8 }}>
-              <option>Electronics</option><option>Accessories</option><option>Stationery</option>
-            </select>
-            <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Add Product</button>
-          </form>
-
-          <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead><tr style={{ background: '#f1f5f9' }}><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
-            <tbody>
-              {products.map(p => (
-                <tr key={p._id}>
-                  <td>{p.name}</td><td>{p.category}</td><td>₹{p.price}</td><td>{p.stock}</td>
-                  <td><button onClick={() => handleDeleteProduct(p._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>Delete</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* 2. Users Tab */}
-      {tab === 'users' && (
-        <div>
-          <form onSubmit={handleAddUser} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-            <input placeholder="Full Name" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} required style={{ padding: 8 }} />
-            <input placeholder="Email (abc@xyz.com)" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} required style={{ padding: 8 }} />
-            <input placeholder="10-digit Phone" value={userForm.phone} onChange={e => setUserForm({ ...userForm, phone: e.target.value })} required style={{ padding: 8, width: 120 }} />
-            <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Add User</button>
-          </form>
-
-          <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead><tr style={{ background: '#f1f5f9' }}><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u._id}>
-                  <td>{u.name}</td><td>{u.email}</td><td>{u.phone}</td>
-                  <td><button onClick={() => handleDeleteUser(u._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>Delete</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <table className="table">
+        <thead>
+          <tr>
+            <th>PRODUCT NAME</th><th>PRICE</th><th>STOCK</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(p => (
+            <tr key={p._id}>
+              <td><strong>{p.name}</strong></td>
+              <td>INR {p.price}</td>
+              <td>{p.stock} units</td>
+              <td>
+                <button onClick={() => onDelete(p._id)} className="btn btn-danger btn-sm">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {products.length === 0 && (
+            <tr><td colSpan="4" style={{ textAlign: 'center', padding: 20 }}>No products found.</td></tr>
+          )}
+        </tbody>
+      </table>
     </div>
+  );
+}
+
+function AddProductView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', price: '', stock: '' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (Number(form.price) <= 0) {
+      alert('Price must be greater than 0');
+      return;
+    }
+    onAdd(form);
+    navigate('/');
+  };
+
+  return (
+    <div className="card">
+      <h2>Add Product Record</h2>
+      <form onSubmit={handleSubmit} className="form">
+        <div className="form-group">
+          <label>Product Name:</label>
+          <input
+            required
+            placeholder="e.g. Mechanical Keyboard"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Price (INR):</label>
+          <input
+            type="number"
+            min="1"
+            required
+            placeholder="Price"
+            value={form.price}
+            onChange={e => setForm({ ...form, price: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Stock Count:</label>
+          <input
+            type="number"
+            min="0"
+            required
+            placeholder="Stock units"
+            value={form.stock}
+            onChange={e => setForm({ ...form, stock: e.target.value })}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="submit" className="btn btn-primary">Save Product</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default function App() {
+  const [products, setProducts] = useState([]);
+
+  const loadProducts = async () => {
+    const res = await fetch('/api/products');
+    setProducts(await res.json());
+  };
+
+  useEffect(() => { loadProducts(); }, []);
+
+  const handleAdd = async (formData) => {
+    await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    loadProducts();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this product?')) return;
+    await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    loadProducts();
+  };
+
+  return (
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>Product Management System (Q7)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Products</Link>
+            <Link to="/add" className="nav-link">Add Product</Link>
+          </nav>
+        </header>
+
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProductListView
+                  products={products}
+                  onDelete={handleDelete}
+                />
+              }
+            />
+            <Route
+              path="/add"
+              element={<AddProductView onAdd={handleAdd} />}
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }

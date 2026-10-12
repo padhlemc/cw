@@ -1,54 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import './style.css';
 
-export default function App() {
-  const [expenses, setExpenses] = useState([]);
-  const [form, setForm] = useState({ title: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0] });
-
-  const loadExpenses = async () => {
-    const res = await fetch('/api/expenses');
-    setExpenses(await res.json());
-  };
-
-  useEffect(() => { loadExpenses(); }, []);
-
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    await fetch('/api/expenses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    setForm({ title: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0] });
-    loadExpenses();
-  };
-
-  const handleDelete = async (id) => {
-    await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
-    loadExpenses();
-  };
-
-  const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-  const categories = ['Food', 'Transport', 'Entertainment', 'Bills'];
+function ExpensesListView({ expenses, onDelete, totalSpent, categories }) {
+  const navigate = useNavigate();
 
   return (
-    <div style={{ maxWidth: 800, margin: '20px auto', fontFamily: 'sans-serif', padding: 15 }}>
-      <h2>💰 Daily Expense Tracker (Roll 39-45)</h2>
-
-      {/* Summary KPI Card */}
+    <div>
       <div style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
-        <div style={{ flex: 1, padding: 15, background: '#eff6ff', borderRadius: 8, border: '1px solid #bfdbfe' }}>
-          <h4 style={{ margin: '0 0 5px', color: '#1e40af' }}>Total Monthly Spent</h4>
-          <h2 style={{ margin: 0, color: '#1d4ed8' }}>₹{totalSpent}</h2>
+        <div className="card" style={{ flex: 1 }}>
+          <h4 style={{ color: '#1e40af', marginBottom: 6 }}>Total Spent</h4>
+          <h2 style={{ color: '#1d4ed8' }}>INR {totalSpent}</h2>
         </div>
-        <div style={{ flex: 2, padding: 15, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-          <h4 style={{ margin: '0 0 8px' }}>Category Breakdown</h4>
+        <div className="card" style={{ flex: 2 }}>
+          <h4 style={{ marginBottom: 10 }}>Category Breakdown</h4>
           {categories.map(cat => {
-            const catTotal = expenses.filter(e => e.category === cat).reduce((s, e) => s + Number(e.amount), 0);
+            const catTotal = expenses.filter(e => e.category === cat).reduce((s, e) => s + Number(e.amount || 0), 0);
             const pct = totalSpent > 0 ? Math.round((catTotal / totalSpent) * 100) : 0;
             return (
               <div key={cat} style={{ marginBottom: 6, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                  <span>{cat}: ₹{catTotal}</span><span>{pct}%</span>
+                  <span>{cat}: INR {catTotal}</span><span>{pct}%</span>
                 </div>
                 <div style={{ background: '#e2e8f0', height: 8, borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{ background: '#3b82f6', width: `${pct}%`, height: '100%' }}></div>
@@ -59,42 +31,168 @@ export default function App() {
         </div>
       </div>
 
-      {/* Add Expense Form */}
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-        <input placeholder="Expense Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required style={{ flex: 2, padding: 8 }} />
-        <input placeholder="Amount (₹)" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required style={{ flex: 1, padding: 8 }} />
-        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ padding: 8 }}>
-          {categories.map(c => <option key={c}>{c}</option>)}
-        </select>
-        <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required style={{ padding: 8 }} />
-        <button type="submit" style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          Add Expense
-        </button>
-      </form>
-
-      {/* Expense History Table */}
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ background: '#f1f5f9' }}>
-            <th>Date</th><th>Title</th><th>Category</th><th>Amount</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.map(e => (
-            <tr key={e._id}>
-              <td>{e.date}</td><td>{e.title}</td><td>{e.category}</td><td>₹{e.amount}</td>
-              <td>
-                <button onClick={() => handleDelete(e._id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>
-                  Delete
-                </button>
-              </td>
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3>All Expenses ({expenses.length})</h3>
+          <button onClick={() => navigate('/add')} className="btn btn-primary">
+            Add New Expense
+          </button>
+        </div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>TITLE</th><th>CATEGORY</th><th>DATE</th><th>AMOUNT</th><th>ACTION</th>
             </tr>
-          ))}
-          {expenses.length === 0 && (
-            <tr><td colSpan="5" style={{ textAlign: 'center' }}>No expenses recorded yet.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {expenses.map(exp => (
+              <tr key={exp._id}>
+                <td>{exp.title}</td><td>{exp.category}</td><td>{exp.date}</td><td>INR {exp.amount}</td>
+                <td>
+                  <button onClick={() => onDelete(exp._id)} className="btn btn-danger btn-sm">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {expenses.length === 0 && (
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: 20 }}>No expenses logged yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
+  );
+}
+
+function AddExpenseView({ onAdd }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    title: '',
+    amount: '',
+    category: 'Food',
+    date: new Date().toISOString().split('T')[0]
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(form);
+    navigate('/');
+  };
+
+  return (
+    <div className="card">
+      <h2>Log New Expense</h2>
+      <form onSubmit={handleSubmit} className="form">
+        <div className="form-group">
+          <label>Expense Title:</label>
+          <input
+            required
+            placeholder="e.g. Groceries"
+            value={form.title}
+            onChange={e => setForm({ ...form, title: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Amount (INR):</label>
+          <input
+            type="number"
+            required
+            placeholder="Amount"
+            value={form.amount}
+            onChange={e => setForm({ ...form, amount: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Category:</label>
+          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Entertainment</option>
+            <option>Bills</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Date:</label>
+          <input
+            type="date"
+            required
+            value={form.date}
+            onChange={e => setForm({ ...form, date: e.target.value })}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="submit" className="btn btn-primary">Save Expense</button>
+          <button type="button" onClick={() => navigate('/')} className="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default function App() {
+  const [expenses, setExpenses] = useState([]);
+
+  const loadExpenses = async () => {
+    const res = await fetch('/api/expenses');
+    setExpenses(await res.json());
+  };
+
+  useEffect(() => { loadExpenses(); }, []);
+
+  const handleAdd = async (formData) => {
+    await fetch('/api/expenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    loadExpenses();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this expense?')) return;
+    await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+    loadExpenses();
+  };
+
+  const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const categories = ['Food', 'Transport', 'Entertainment', 'Bills'];
+
+  return (
+    <Router>
+      <div className="container">
+        <header className="header">
+          <h1>Daily Expense Tracker (Roll 39-45)</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link">Dashboard</Link>
+            <Link to="/add" className="nav-link">Add Expense</Link>
+          </nav>
+        </header>
+
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ExpensesListView
+                  expenses={expenses}
+                  onDelete={handleDelete}
+                  totalSpent={totalSpent}
+                  categories={categories}
+                />
+              }
+            />
+            <Route
+              path="/add"
+              element={<AddExpenseView onAdd={handleAdd} />}
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }

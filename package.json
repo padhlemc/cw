@@ -1,30 +1,9 @@
 {
-  "name": "ost-ia2-solutions",
+  "name": "universal-lab-exam-starter",
   "version": "1.0.0",
-  "description": "Complete mock test solutions (Q1-Q9) with Express + React 18 + MongoDB Native Driver + Universal Exam Template",
-  "main": "verify_all.js",
-  "bin": {
-    "hw": "./bin/cli.js",
-    "ost": "./bin/cli.js"
-  },
-  "files": [
-    "bin",
-    "already_set_questions",
-    "TEMPLATE_EXAM_STARTER",
-    "README.md",
-    "UNIVERSAL_EXAM_TEMPLATE.md",
-    "EXAM_STUDY_AND_VIDEO_GUIDE.md",
-    "verify_all.js",
-    "build_all.js"
-  ],
+  "description": "Universal Full-Stack Lab Exam Starter (Express + React 18 + Native MongoDB + React Router)",
   "scripts": {
-    "start": "node verify_all.js",
-    "build": "node build_all.js",
-    "all": "node bin/cli.js all",
-    "verify": "node verify_all.js",
-    "test": "node verify_all.js",
     "template": "node TEMPLATE_EXAM_STARTER/backend/server.js",
-    "template:core": "node TEMPLATE_EXAM_STARTER/backend/server_core_node.js",
     "q1": "node already_set_questions/Q1_Book_Ecommerce_Roll_24-30/backend/server.js",
     "q2": "node already_set_questions/Q2_Doctor_Appointment_Roll_31-38/backend/server.js",
     "q3": "node already_set_questions/Q3_Expense_Tracker_Roll_39-45/backend/server.js",
@@ -38,23 +17,15 @@
   "keywords": [
     "ost",
     "web-programming",
-    "ia2",
-    "mock-test",
+    "lab-exam",
     "express",
     "react",
+    "react-router",
     "mongodb",
     "mongoclient"
   ],
   "author": "Student",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/padhlemc/cw.git"
-  },
-  "bugs": {
-    "url": "https://github.com/padhlemc/cw/issues"
-  },
-  "homepage": "https://github.com/padhlemc/cw#readme",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
